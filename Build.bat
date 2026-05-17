@@ -52,6 +52,7 @@ if not exist ".\logs" (
     echo [INFO] Creating log directory...
     mkdir ".\logs"
 )
+
 :: ============================================================
 ::  Git 情報取得（Git が無い場合は NO_GIT）
 :: ============================================================
@@ -70,7 +71,7 @@ for /f "tokens=1-3 delims=/ " %%a in ("%date%") do (
 set BUILD_DATE=%YYYY%-%MM%-%DD%
 
 :: ============================================================
-::  VersionInfo.cs 生成
+::  VersionInfo.cs 生成（Core フォルダへ）
 :: ============================================================
 (
 echo namespace PowerShellController {
@@ -82,10 +83,10 @@ echo         public const string BuildDate   = "%BUILD_DATE%";
 echo         public const string GitVersion  = "%GIT_VER%";
 echo     }
 echo }
-) > .\src\VersionInfo.cs
+) > .\src\Core\VersionInfo.cs
 
 :: ============================================================
-::  コンパイル
+::  コンパイル（フォルダ構成に対応）
 :: ============================================================
 "%CSC_PATH%" ^
  /out:.\bin\%TARGET_EXE% ^
@@ -94,7 +95,10 @@ echo }
  /codepage:65001 ^
  /r:System.dll ^
  /win32icon:.\ico\psc.ico ^
- .\src\*.cs
+ .\src\Core\*.cs ^
+ .\src\Parser\*.cs ^
+ .\src\Registry\*.cs ^
+ .\src\Commands\*.cs
 
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] %TARGET_EXE% has been built.
