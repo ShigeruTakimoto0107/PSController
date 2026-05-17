@@ -1,17 +1,54 @@
 using System;
+using System.Text;
+using System.Threading;
 
 namespace PowerShellController
 {
-    /// <summary>
-    /// PowerShell へのコマンド送信を外部から差し込むためのホスト。
-    /// Program.cs 側で process.StandardInput.WriteLine(...) を割り当てる。
-    /// </summary>
     public static class PowerShellHost
     {
-        /// <summary>
-        /// PowerShell に 1 行送信するためのデリゲート。
-        /// Program.cs が起動時に設定し、各コマンド実行側はこれを呼ぶだけでよい。
-        /// </summary>
+        // WAIT 用フィールド
+        internal static readonly object WaitLock = new object();
+        internal static StringBuilder WaitBuffer = new StringBuilder();
+        internal static AutoResetEvent WaitEvent = new AutoResetEvent(false);
+        internal static string WaitPattern = null;
+        internal static bool WaitActive = false;
+
         public static Action<string> SendToPowerShell { get; set; }
+
+        // WAIT
+        public static void BeginWait(string pattern)
+        {
+            if (pattern == null)
+                throw new ArgumentNullException("pattern");
+
+            lock (WaitLock)
+            {
+                WaitPattern = pattern.ToLower();
+                WaitBuffer.Length = 0;
+                WaitActive = true;
+                WaitEvent.Reset();
+            }
+        }
+
+        public static bool WaitUntilMatched()
+        {
+            WaitEvent.WaitOne();
+            return true;
+        }
+
+        public static bool WaitUntilMatched(int timeoutMs)
+        {
+            bool signaled = WaitEvent.WaitOne(timeoutMs);
+            return signaled;
+        }
+
+        // ★ 色付き出力（新規追加）
+        public static void WriteLineColored(string text, ConsoleColor color)
+        {
+            var old = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(text);
+            Console.ForegroundColor = old;
+        }
     }
 }

@@ -100,6 +100,8 @@ echo }
  .\src\Registry\*.cs ^
  .\src\Commands\*.cs
 
+
+pause
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] %TARGET_EXE% has been built.
     echo [INFO] Running %TARGET_EXE%...

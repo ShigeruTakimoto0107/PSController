@@ -2,26 +2,224 @@ using System;
 
 namespace PowerShellController
 {
-    /// <summary>
-    /// 内部コマンドを CommandRegistry に登録するビルダー。
-    /// </summary>
     public static class CommandRegistryBuilder
     {
-        /// <summary>
-        /// Program.cs 起動時に 1 回だけ呼ばれる。
-        /// </summary>
         public static void Build(CommandRegistry registry)
         {
-            // print
-            registry.Register("print", new PrintCommand().Execute);
+            // WAIT
+            registry.Register("wait", (arg, ctx) =>
+            {
+                if (string.IsNullOrEmpty(arg)) return;
+                PowerShellHost.BeginWait(arg);
+                PowerShellHost.WaitUntilMatched();
+            });
 
-            // setvar
-            registry.Register("setvar", new SetVarCommand().Execute);
+            // WAITTO
+            registry.Register("waitto", (arg, ctx) =>
+            {
+                if (string.IsNullOrEmpty(arg)) return;
 
-            // ver
-            registry.Register("ver", new VerCommand().Execute);
+                string[] parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return;
 
-            // rawtext は登録しない（Unknown として扱う）
+                int seconds;
+                if (!int.TryParse(parts[0], out seconds)) return;
+                if (seconds <= 0) seconds = 1;
+
+                int timeoutMs = seconds * 1000;
+                string pattern = parts[1];
+
+                PowerShellHost.BeginWait(pattern);
+                bool ok = PowerShellHost.WaitUntilMatched(timeoutMs);
+
+                ctx.LastWaitResult = ok;
+            });
+
+            // IF
+            registry.Register("if", (arg, ctx) =>
+            {
+                if (string.IsNullOrEmpty(arg)) return;
+
+                ctx.InIfBlock = true;
+                ctx.IfBlockAlreadyTrue = false;
+
+                string[] parts = arg.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return;
+
+                string left = parts[0];
+                string op = parts[1];
+                string right = parts[2];
+
+                if (left.Equals("lastwait", StringComparison.OrdinalIgnoreCase))
+                    left = ctx.LastWaitResult ? "ok" : "ng";
+                else
+                    left = ctx.Expand(left);
+
+                right = ctx.Expand(right);
+
+                bool result = false;
+                if (op == "==" || op == "=") result = (left == right);
+                else if (op == "!=") result = (left != right);
+
+                ctx.SkipMode = !result;
+                if (result) ctx.IfBlockAlreadyTrue = true;
+            });
+
+            // ELSEIF
+            registry.Register("elseif", (arg, ctx) =>
+            {
+                if (!ctx.InIfBlock) return;
+                if (ctx.IfBlockAlreadyTrue)
+                {
+                    ctx.SkipMode = true;
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(arg))
+                {
+                    ctx.SkipMode = true;
+                    return;
+                }
+
+                string[] parts = arg.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3)
+                {
+                    ctx.SkipMode = true;
+                    return;
+                }
+
+                string left = parts[0];
+                string op = parts[1];
+                string right = parts[2];
+
+                if (left.Equals("lastwait", StringComparison.OrdinalIgnoreCase))
+                    left = ctx.LastWaitResult ? "ok" : "ng";
+                else
+                    left = ctx.Expand(left);
+
+                right = ctx.Expand(right);
+
+                bool result = false;
+                if (op == "==" || op == "=") result = (left == right);
+                else if (op == "!=") result = (left != right);
+
+                if (result)
+                {
+                    ctx.SkipMode = false;
+                    ctx.IfBlockAlreadyTrue = true;
+                }
+                else
+                {
+                    ctx.SkipMode = true;
+                }
+            });
+
+            // ELSE
+            registry.Register("else", (arg, ctx) =>
+            {
+                if (!ctx.InIfBlock) return;
+
+                if (ctx.IfBlockAlreadyTrue)
+                {
+                    ctx.SkipMode = true;
+                }
+                else
+                {
+                    ctx.SkipMode = false;
+                    ctx.IfBlockAlreadyTrue = true;
+                }
+            });
+
+            // ENDIF
+            registry.Register("endif", (arg, ctx) =>
+            {
+                ctx.SkipMode = false;
+                ctx.InIfBlock = false;
+                ctx.IfBlockAlreadyTrue = false;
+            });
+
+            // PRINT（色指定対応）
+            registry.Register("print", (arg, ctx) =>
+            {
+                if (string.IsNullOrEmpty(arg)) return;
+
+                var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0) return;
+
+                string colorName = parts[0].ToLower();
+                string message = (parts.Length >= 2) ? parts[1] : "";
+                message = ctx.Expand(message);
+
+                ConsoleColor color;
+
+                switch (colorName)
+                {
+                    case "red": color = ConsoleColor.Red; break;
+                    case "green": color = ConsoleColor.Green; break;
+                    case "yellow": color = ConsoleColor.Yellow; break;
+                    case "blue": color = ConsoleColor.Blue; break;
+                    case "magenta": color = ConsoleColor.Magenta; break;
+                    case "cyan": color = ConsoleColor.Cyan; break;
+                    case "white": color = ConsoleColor.White; break;
+
+                    default:
+                        Console.WriteLine(ctx.Expand(arg));
+                        return;
+                }
+
+                PowerShellHost.WriteLineColored(message, color);
+            });
+
+            // SETVAR
+            registry.Register("setvar", (arg, ctx) =>
+            {
+                if (string.IsNullOrEmpty(arg)) return;
+
+                var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return;
+
+                ctx.SetVar(parts[0], ctx.Expand(parts[1]));
+            });
+
+            // RAWTEXT
+            registry.Register("rawtext", (arg, ctx) =>
+            {
+                if (string.IsNullOrEmpty(arg)) return;
+                PowerShellHost.SendToPowerShell(ctx.Expand(arg));
+            });
+
+            // SENDLN
+            registry.Register("sendln", (arg, ctx) =>
+            {
+                if (string.IsNullOrEmpty(arg)) return;
+                PowerShellHost.SendToPowerShell(ctx.Expand(arg) + "\n");
+            });
+
+            // VER（print green）
+            registry.Register("ver", (arg, ctx) =>
+            {
+                string line =
+                    VersionInfo.ProgramName + " " +
+                    VersionInfo.Version + " (" +
+                    VersionInfo.BuildDate + ", " +
+                    VersionInfo.GitVersion + ")";
+
+                // Invoke は存在しない → print のロジックを直接呼ぶ
+                var printParts = ("green " + line).Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+                string colorName = printParts[0];
+                string message = (printParts.Length >= 2) ? printParts[1] : "";
+
+                ConsoleColor color;
+
+                switch (colorName)
+                {
+                    case "green": color = ConsoleColor.Green; break;
+                    default: color = ConsoleColor.White; break;
+                }
+
+                PowerShellHost.WriteLineColored(message, color);
+            });
         }
     }
 }

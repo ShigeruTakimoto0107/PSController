@@ -32,6 +32,9 @@ namespace PowerShellController
             process.StandardInput.WriteLine("");
             process.StandardInput.Flush();
 
+            // ============================
+            // 標準出力監視タスク
+            // ============================
             Task.Run(() =>
             {
                 string buffer = "";
@@ -44,6 +47,28 @@ namespace PowerShellController
                     char c = (char)ch;
                     buffer += c;
 
+                    // ============================
+                    // ★ WAIT ロジック（ここから）
+                    // ============================
+                    lock (PowerShellHost.WaitLock)
+                    {
+                        if (PowerShellHost.WaitActive)
+                        {
+                            PowerShellHost.WaitBuffer.Append(char.ToLower(c));
+
+                            if (PowerShellHost.WaitBuffer.ToString().Contains(PowerShellHost.WaitPattern))
+                            {
+                                PowerShellHost.WaitActive = false;
+                                PowerShellHost.WaitEvent.Set();
+                                PowerShellHost.WaitBuffer.Length = 0;
+                            }
+                        }
+                    }
+                    // ============================
+                    // ★ WAIT ロジック（ここまで）
+                    // ============================
+
+                    // プロンプト検出
                     if (buffer.EndsWith("> "))
                     {
                         if (skipFirstPrompt)
@@ -59,6 +84,7 @@ namespace PowerShellController
                         continue;
                     }
 
+                    // 改行処理
                     if (c == '\n')
                     {
                         if (skipNextNewline)
@@ -70,6 +96,7 @@ namespace PowerShellController
 
                         string line = buffer.TrimEnd('\r', '\n');
 
+                        // ユーザー入力のエコーバック抑制
                         if (lastUserInput != null &&
                             string.Equals(line, lastUserInput, StringComparison.Ordinal))
                         {
@@ -83,6 +110,9 @@ namespace PowerShellController
                 }
             });
 
+            // ============================
+            // 標準エラー監視タスク
+            // ============================
             Task.Run(() =>
             {
                 while (true)
@@ -96,7 +126,7 @@ namespace PowerShellController
             var registry = new CommandRegistry();
             CommandRegistryBuilder.Build(registry);
 
-            // ★ 修正ポイント：ExecutionContext に registry を渡す
+            // ExecutionContext に registry を渡す
             var ctx = new ExecutionContext(registry);
 
             PowerShellHost.SendToPowerShell = delegate(string cmd)
@@ -113,6 +143,9 @@ namespace PowerShellController
                     registry.Execute(line, ctx);
             }
 
+            // ============================
+            // インタラクティブ入力ループ
+            // ============================
             while (true)
             {
                 string input = Console.ReadLine();

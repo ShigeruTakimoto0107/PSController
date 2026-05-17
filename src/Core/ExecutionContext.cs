@@ -15,6 +15,26 @@ namespace PowerShellController
         public CommandRegistry Registry { get; private set; }
 
         /// <summary>
+        /// WAITTO の成功/失敗を保持するフラグ
+        /// </summary>
+        public bool LastWaitResult { get; set; }
+
+        /// <summary>
+        /// IF/ENDIF のスキップ制御フラグ
+        /// </summary>
+        public bool SkipMode { get; set; }
+
+        /// <summary>
+        /// IF ブロック内にいるかどうか
+        /// </summary>
+        public bool InIfBlock { get; set; }              // ★ 追加
+
+        /// <summary>
+        /// IF / ELSEIF のどこかが true になったか
+        /// </summary>
+        public bool IfBlockAlreadyTrue { get; set; }     // ★ 追加
+
+        /// <summary>
         /// 変数名 → 値 の辞書。
         /// 例：A=1 → "%A%" を "1" に展開する。
         /// </summary>
