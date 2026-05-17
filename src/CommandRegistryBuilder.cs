@@ -2,12 +2,26 @@ using System;
 
 namespace PowerShellController
 {
+    /// <summary>
+    /// PSC 内部コマンド（print / setvar / rawtext / ver など）を
+    /// CommandRegistry に登録するビルダー。
+    /// </summary>
     public static class CommandRegistryBuilder
     {
+        /// <summary>
+        /// 全内部コマンドを registry に登録する。
+        /// Program.cs 起動時に 1 回だけ呼ばれる。
+        /// </summary>
         public static void Build(CommandRegistry registry)
         {
             // ---------------------------------------------------------
             // print
+            //   print red Hello
+            //   print "Hello"
+            //
+            //   ・先頭単語が色名なら色付き出力
+            //   ・それ以外は通常出力
+            //   ・変数展開は ctx.Expand() に任せる
             // ---------------------------------------------------------
             registry.Register("print", (arg, ctx) =>
             {
@@ -15,7 +29,7 @@ namespace PowerShellController
                 string colorName = parts[0];
                 string text = (parts.Length == 2) ? parts[1] : parts[0];
 
-                // 色マップ
+                // 色マップ（大文字小文字無視）
                 ConsoleColor col;
                 var map = new System.Collections.Generic.Dictionary<string, ConsoleColor>(StringComparer.OrdinalIgnoreCase)
                 {
@@ -44,6 +58,8 @@ namespace PowerShellController
 
             // ---------------------------------------------------------
             // setvar
+            //   setvar A 1
+            //   → ctx.SetVar("A", "1")
             // ---------------------------------------------------------
             registry.Register("setvar", (arg, ctx) =>
             {
@@ -55,7 +71,9 @@ namespace PowerShellController
             });
 
             // ---------------------------------------------------------
-            // rawtext → PowerShell にそのまま送る
+            // rawtext
+            //   PowerShell にそのまま送る
+            //   ※ sendln と違い、変数展開しない
             // ---------------------------------------------------------
             registry.Register("rawtext", (arg, ctx) =>
             {
@@ -64,6 +82,8 @@ namespace PowerShellController
 
             // ---------------------------------------------------------
             // ver
+            //   バージョン情報を色付きで表示
+            //   print コマンドを内部的に呼び出す
             // ---------------------------------------------------------
             registry.Register("ver", (arg, ctx) =>
             {
