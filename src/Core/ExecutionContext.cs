@@ -69,5 +69,12 @@ namespace PowerShellController
             }
             return text;
         }
+        
+        // ループ制御
+		public int LoopCount { get; set; }
+		public int LoopStartIndex { get; set; }
+		public bool BreakRequested { get; set; }
+		public bool LoopBackRequested { get; set; }
+        
     }
 }

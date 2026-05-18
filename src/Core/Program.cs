@@ -117,20 +117,48 @@ namespace PowerShellController
             };
 
             Console.Clear();
-
 			if (lines != null)
 			{
-			    try  // ← 追加
+			    try
 			    {
-			        foreach (string line in lines)
-			            registry.Execute(line, ctx);
+			        for (int i = 0; i < lines.Count; i++)
+			        {
+			            // loop コマンドでループ先頭インデックスを記録
+			            string trimmed = lines[i].Trim();
+			            if (trimmed.StartsWith("loop", StringComparison.OrdinalIgnoreCase) &&
+			                !trimmed.StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
+			            {
+			                ctx.LoopStartIndex = i;
+			            }
+
+			            registry.Execute(lines[i], ctx);
+
+			            // BreakRequested 中は endloop まで読み飛ばす
+			            if (ctx.BreakRequested)
+			            {
+			                while (i < lines.Count &&
+			                    !lines[i].Trim().StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
+			                {
+			                    i++;
+			                }
+			                continue;
+			            }
+
+			            // endloop でループ先頭に戻る
+			            if (ctx.LoopBackRequested)
+			            {
+			                i = ctx.LoopStartIndex - 1;
+			                ctx.LoopBackRequested = false;
+			            }
+			        }
 			    }
-			    catch (MacroAbortException ex)  // ← 追加
+			    catch (MacroAbortException ex)
 			    {
 			        Console.ForegroundColor = ConsoleColor.Red;
 			        Console.WriteLine(ex.Message);
 			        Console.ResetColor();
 			    }
+
 
 				// Sleepをやめて、プロンプトが来るまで最大1秒待つ
 				int waited = 0;

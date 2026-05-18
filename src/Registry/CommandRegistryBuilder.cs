@@ -17,6 +17,9 @@ namespace PowerShellController
             new SetPromptCommand().Register(registry);
             new PauseCommand().Register(registry);
             new ExitCommand().Register(registry);
+            new LoopCommand().Register(registry);
+            new EndLoopCommand().Register(registry);
+            new BreakCommand().Register(registry);
         }
     }
 }
