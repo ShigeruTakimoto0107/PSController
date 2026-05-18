@@ -1,7 +1,7 @@
-# PowerShellController
+# PowerShellController (PSController)
 
 PowerShellController は、PowerShell を外部プロセスとして起動し、  
-**マクロファイル (.macro / .psm)** を用いて PowerShell を自動操作するための軽量コントローラです。
+**マクロファイル (.macro)** を用いて PowerShell を自動操作するための軽量コントローラです。
 
 PowerShell の標準出力をリアルタイムで監視し、  
 マクロコマンドを逐次実行することで、  
@@ -9,106 +9,145 @@ PowerShell の標準出力をリアルタイムで監視し、
 
 ---
 
-# 機能概要
+## 機能概要
 
-- PowerShell の起動と制御（管理者権限起動も可能）
-- マクロファイル (.macro / .psm) の実行
-- sendln による PowerShell へのコマンド送信
-- wait / waitto による出力待機（誤一致防止ロジック搭載）
-- setvar による変数展開
-- if / elseif / else / endif による条件分岐
-- loop / endloop, while / endwhile による繰り返し
-- break / continue によるループ制御
-- include / call / return によるサブルーチン
-- goto / label によるジャンプ
-- rawtext による生文字列送信
-- print によるメッセージ出力
-- logopen / logclose によるログ出力
+- PowerShell の起動と制御
+- マクロファイル (.macro) の実行
+- `sendln` による PowerShell へのコマンド送信
+- `wait` / `waitto` による出力待機
+- `setvar` による変数展開（`%VAR%` 形式）
+- `if` / `elseif` / `else` / `endif` による条件分岐
+- `print` によるカラーメッセージ出力
+- `ver` によるバージョン情報表示
+- 起動直後のプロンプト誤検出防止ロジック搭載
+- マクロ終了後のインタラクティブ入力への自動移行
 
 ---
 
-# ディレクトリ構成（最新版）
+## ディレクトリ構成
 
 ```
-src/
-  CommandRegistry.cs
-  ExecutionContext.*.cs
-  MacroLine.cs
-  MacroLoader.*.cs
-  PowerShellHost.*.cs
-  Program.cs
-  VersionInfo.cs
+PSController/
+├── macros/          # マクロファイル置き場
+├── src/
+│   ├── Commands/    # 各コマンドの実装
+│   ├── Core/        # エントリーポイント・PowerShellホスト・実行コンテキスト
+│   ├── Parser/      # マクロファイルのパース処理
+│   └── Registry/    # コマンド登録・ビルド処理
+├── Build.bat        # ビルドスクリプト
+└── readme.md
 ```
 
 ---
 
-# ソースファイル一覧（説明付き）
+## ソースファイル一覧
 
-| # | ファイル名 | 説明 |
-|---|------------|------|
-| 1 | CommandRegistry.cs | コマンド名 → 実行ハンドラを登録する中心レジストリ |
-| 2 | ExecutionContext.Condition.cs | IF/ELSEIF 条件式の評価ロジック |
-| 3 | ExecutionContext.Control.cs | IF/ELSE/ENDIF、LOOP、WHILE の制御状態管理 |
-| 4 | ExecutionContext.Core.cs | 行番号・CallStack・LoopStack などコア状態 |
-| 5 | ExecutionContext.Expression.cs | `%VAR%` 展開や式評価（==, !=, <, > など） |
-| 6 | ExecutionContext.Skip.cs | IF/LOOP のスキップ状態（CurrentSkip）管理 |
-| 7 | ExecutionContext.Variables.cs | setvar / 変数テーブルの管理 |
-| 8 | MacroLine.cs | 1 行のマクロを構造化（コマンド名・引数・種別） |
-| 9 | MacroLoader.Core.cs | マクロファイル読み込みの中心処理 |
-| 10 | MacroLoader.Parser.cs | 1 行を MacroLine にパースするロジック |
-| 11 | MacroLoader.Utils.cs | コメント除去・空行処理などの補助関数 |
-| 12 | PowerShellHost.CommandKey.cs | コマンド名の正規化（大文字小文字無視など） |
-| 13 | PowerShellHost.Commands.Basic.cs | sendln / print / pause / rawtext / logopen など基本コマンド |
-| 14 | PowerShellHost.Commands.BreakContinue.cs | break / continue の実装 |
-| 15 | PowerShellHost.Commands.BuildRegistry.cs | 全コマンドを CommandRegistry に登録する集約処理 |
-| 16 | PowerShellHost.Commands.Control.cs | IF/ELSE/ENDIF の構文チェック |
-| 17 | PowerShellHost.Commands.If.cs | if / elseif / else / endif の実行ハンドラ |
-| 18 | PowerShellHost.Commands.IncludeCall.cs | include / call / return の実装 |
-| 19 | PowerShellHost.Commands.LabelGoto.cs | label / goto の実装 |
-| 20 | PowerShellHost.Commands.Loop.cs | loop / endloop の実装 |
-| 21 | PowerShellHost.Commands.Wait.cs | wait / waitto の実装（WaitForText / Timeout） |
-| 22 | PowerShellHost.Commands.While.cs | while / endwhile の実装 |
-| 23 | PowerShellHost.Core.Wait.cs | PowerShell 出力監視・waitto の内部状態管理 |
-| 24 | PowerShellHost.Input.cs | PowerShell プロセスへの入力処理 |
-| 25 | PowerShellHost.Runner.cs | マクロ実行ループ・IF/LOOP の構文チェック |
-| 26 | PowerShellHost.StreamReader.cs | 非同期で PowerShell 出力を読み取る仕組み |
-| 27 | Program.cs | エントリーポイント・管理者昇格・ファイル読み込み |
-| 28 | VersionInfo.cs | バージョン番号・ビルド情報 |
+### src/Core/
 
----
+| ファイル名 | 説明 |
+|---|---|
+| `Program.cs` | エントリーポイント。PowerShellプロセス起動・出力監視・インタラクティブループ |
+| `PowerShellHost.cs` | WAITバッファ管理・出力待機・カラー出力などのホスト機能 |
+| `ExecutionContext.cs` | 変数ストア・条件制御フラグ・`%VAR%`展開 |
+| `VersionInfo.cs` | バージョン番号・ビルド情報 |
 
-# マクロファイルの書式
+### src/Commands/
 
-マクロファイルは **1 行 1 コマンド**で構成されます。
+| ファイル名 | 説明 |
+|---|---|
+| `ICommand.cs` | コマンドインターフェース定義 |
+| `PrintCommand.cs` | `print` コマンドの実装（カラー出力対応） |
+| `SetVarCommand.cs` | `setvar` コマンドの実装 |
+| `VerCommand.cs` | `ver` コマンドの実装（バージョン表示） |
 
-例:
+### src/Parser/
 
-```
-setvar A 123
-sendln echo %A%
-wait 123
-```
+| ファイル名 | 説明 |
+|---|---|
+| （パーサー関連ファイル） | マクロファイルの読み込み・1行パース処理 |
+
+### src/Registry/
+
+| ファイル名 | 説明 |
+|---|---|
+| `CommandRegistry.cs` | コマンド名 → 実行ハンドラを登録する中心レジストリ |
+| `CommandRegistryBuilder.cs` | 全コマンドを CommandRegistry に登録する集約処理 |
 
 ---
 
-# 使用可能なコマンド一覧
+## マクロファイルの書式
 
-### sendln \<文字列\>  
-PowerShell に 1 行送信します。
+マクロファイルは **1行1コマンド**で構成されます。  
+`#` または `;` で始まる行はコメントとして無視されます。
 
-### wait \<文字列\>  
-指定した文字列が出力に現れるまで待機します。
+```
+; これはコメント
+wait >
+print cyan 接続完了
+setvar USER admin
+sendln echo %USER%
+waitto 5 >
+print green 完了
+```
 
-### waitto \<秒数\> \<文字列\>  
-指定秒数以内に文字列が出力されなければ TIMEOUT。
+---
 
-### pause \<秒数\>  
-指定秒数だけ停止します。
+## 使用可能なコマンド一覧
 
-### print \<文字列\>  
-コンソールに文字列を出力します。
+| コマンド | 引数 | 説明 |
+|---|---|---|
+| `wait` | `<文字列>` | 指定文字列が出力に現れるまで無制限に待機 |
+| `waitto` | `<秒数> <文字列>` | 指定秒数以内に文字列が現れなければタイムアウト |
+| `sendln` | `<文字列>` | PowerShell に1行送信 |
+| `rawtext` | `<文字列>` | 改行なしで PowerShell に生文字列を送信 |
+| `print` | `<色> <文字列>` | 指定色でコンソールにメッセージを出力 |
+| `setvar` | `<名前> <値>` | 変数を設定（`%名前%` で展開） |
+| `if` | `<左辺> <演算子> <右辺>` | 条件分岐の開始（`==`, `!=` に対応） |
+| `elseif` | `<左辺> <演算子> <右辺>` | 追加条件分岐 |
+| `else` | なし | 条件不一致時の処理 |
+| `endif` | なし | 条件分岐の終了 |
+| `ver` | なし | バージョン情報を表示 |
 
-### setvar \<名前\> \<値\>  
-変数を設定します。
+### print で使用できる色
 
-### label \<名前\>  
+`red` / `green` / `yellow` / `blue` / `cyan` / `magenta` / `white` / `gray`
+
+### if コマンドの特殊変数
+
+| 変数名 | 説明 |
+|---|---|
+| `lastwait` | 直前の `waitto` の結果（`ok` または `ng`）|
+
+使用例：
+```
+waitto 5 >
+if lastwait == ng
+    print red タイムアウトしました
+endif
+```
+
+---
+
+## ビルド方法
+
+```bat
+Build.bat
+```
+
+.NET Framework 4.0 以上が必要です。
+
+---
+
+## 動作環境
+
+- Windows 10 / 11
+- .NET Framework 4.0 以上
+- Windows PowerShell 5.1
+
+---
+
+## バージョン履歴
+
+| バージョン | 内容 |
+|---|---|
+| 1.0.0 | 初版リリース。基本コマンド・WAIT制御・プロンプト制御バグ修正 |
