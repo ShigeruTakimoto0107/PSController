@@ -17,13 +17,17 @@ namespace PowerShellController
 		{
 		    if (string.IsNullOrWhiteSpace(line))
 		        return;
-
+		        
+            line = line.Trim();  // ← 追加
+            
 		    // SkipMode 中は endif だけ通す
 		    if (ctx.SkipMode)
-		    {
-		        if (!line.TrimStart().StartsWith("endif", StringComparison.OrdinalIgnoreCase))
-		            return;
-		    }
+			{
+			    if (!line.StartsWith("endif", StringComparison.OrdinalIgnoreCase) &&
+			        !line.StartsWith("else", StringComparison.OrdinalIgnoreCase) &&
+			        !line.StartsWith("elseif", StringComparison.OrdinalIgnoreCase))
+			        return;
+			}
 
 		    string cmd = line;
 		    string arg = "";
