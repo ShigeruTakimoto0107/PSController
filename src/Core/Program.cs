@@ -139,13 +139,12 @@ namespace PowerShellController
 				    waited += 50;
 				}
 
-				if (!PowerShellHost.PromptWritten)
-				{
-				    PowerShellHost.BeginWait(">");
-				    PowerShellHost.SendToPowerShell("");
-				    PowerShellHost.WaitUntilMatched(3000);
-				    System.Threading.Thread.Sleep(100);
-				}
+				// マクロ終了後は常に空コマンドでプロンプトを出す
+				PowerShellHost.PromptWritten = false;
+				PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
+				PowerShellHost.SendToPowerShell("");
+				PowerShellHost.WaitUntilMatched(3000);
+				
 			}
 			// ============================
             // インタラクティブ入力ループ

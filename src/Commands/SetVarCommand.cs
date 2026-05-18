@@ -2,26 +2,23 @@ using System;
 
 namespace PowerShellController
 {
-    /// <summary>
-    /// setvar コマンド
-    /// 変数を ExecutionContext に設定する。
-    /// </summary>
     public class SetVarCommand : ICommand
     {
-        public string Name
+        public string Name { get { return "setvar"; } }
+
+        public void Register(CommandRegistry registry)
         {
-            get { return "setvar"; }
+            registry.Register(Name, Execute);
         }
 
         public void Execute(string arg, ExecutionContext ctx)
         {
-            var parts = arg.Split(new[] { ' ' }, 2);
-            if (parts.Length == 2)
-            {
-                string key = parts[0];
-                string value = parts[1];
-                ctx.SetVar(key, ctx.Expand(value));
-            }
+            if (string.IsNullOrEmpty(arg)) return;
+
+            var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2) return;
+
+            ctx.SetVar(parts[0], ctx.Expand(parts[1]));
         }
     }
 }

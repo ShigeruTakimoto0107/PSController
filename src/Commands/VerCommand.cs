@@ -4,21 +4,27 @@ namespace PowerShellController
 {
     public class VerCommand : ICommand
     {
-        public string Name
+        public string Name { get { return "ver"; } }
+
+        public void Register(CommandRegistry registry)
         {
-            get { return "ver"; }
+            registry.Register(Name, Execute);
         }
 
-        public void Execute(string arg, ExecutionContext ctx)
-        {
-            // 旧 Builder と同じ動作：
-            // registry.Execute("print <color> <text>", ctx);
+		public void Execute(string arg, ExecutionContext ctx)
+		{
+		    string line =
+		        VersionInfo.ProgramName + " " +
+		        VersionInfo.Version + " (" +
+		        VersionInfo.BuildDate + ", " +
+		        VersionInfo.GitVersion + ")";
 
-            ctx.Registry.Execute("print cyan " + VersionInfo.ProgramName, ctx);
-            ctx.Registry.Execute("print yellow Version " + VersionInfo.Version, ctx);
-            ctx.Registry.Execute("print gray " + VersionInfo.Copyright, ctx);
-            ctx.Registry.Execute("print white Build: " + VersionInfo.BuildDate, ctx);
-            ctx.Registry.Execute("print magenta Git: " + VersionInfo.GitVersion, ctx);
-        }
+		    if (PowerShellHost.PromptWritten)
+		    {
+		        Console.WriteLine();
+		    }
+		    PowerShellHost.WriteLineColored(line, ConsoleColor.Green);
+		    // PromptWritten はそのまま触らない ← ★修正
+		}
     }
 }

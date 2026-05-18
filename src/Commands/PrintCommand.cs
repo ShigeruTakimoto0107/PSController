@@ -5,43 +5,46 @@ namespace PowerShellController
 {
     public class PrintCommand : ICommand
     {
-        public string Name
+        public string Name { get { return "print"; } }
+
+        public void Register(CommandRegistry registry)
         {
-            get { return "print"; }
+            registry.Register(Name, Execute);
         }
 
         public void Execute(string arg, ExecutionContext ctx)
         {
-            var parts = arg.Split(new[] { ' ' }, 2);
-            string colorName = parts[0];
-            string text = (parts.Length == 2) ? parts[1] : parts[0];
+            if (string.IsNullOrEmpty(arg)) return;
 
-            ConsoleColor col;
+            var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0) return;
+
+            string colorName = parts[0].ToLower();
+            string message = (parts.Length >= 2) ? parts[1] : "";
+            message = ctx.Expand(message);
+
+            ConsoleColor color;
             var map = new Dictionary<string, ConsoleColor>(StringComparer.OrdinalIgnoreCase)
             {
-                { "red", ConsoleColor.Red },
-                { "green", ConsoleColor.Green },
-                { "yellow", ConsoleColor.Yellow },
-                { "blue", ConsoleColor.Blue },
-                { "cyan", ConsoleColor.Cyan },
+                { "red",     ConsoleColor.Red },
+                { "green",   ConsoleColor.Green },
+                { "yellow",  ConsoleColor.Yellow },
+                { "blue",    ConsoleColor.Blue },
                 { "magenta", ConsoleColor.Magenta },
-                { "white", ConsoleColor.White },
-                { "gray", ConsoleColor.Gray }
+                { "cyan",    ConsoleColor.Cyan },
+                { "white",   ConsoleColor.White }
             };
 
-            if (map.TryGetValue(colorName, out col))
+            if (PowerShellHost.PromptWritten)
             {
-                var old = Console.ForegroundColor;
-
-                Console.ForegroundColor = col;
-                Console.WriteLine(ctx.Expand(text));
-                Console.ForegroundColor = old;
+                Console.WriteLine();
+                
             }
+
+            if (map.TryGetValue(colorName, out color))
+                PowerShellHost.WriteLineColored(message, color);
             else
-            {
-
                 Console.WriteLine(ctx.Expand(arg));
-            }
         }
     }
 }
