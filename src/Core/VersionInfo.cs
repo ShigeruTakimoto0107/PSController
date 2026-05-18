@@ -3,7 +3,7 @@ namespace PowerShellController {
         public const string ProgramName = "PowerShellController";
         public const string Version     = "1.0.0";
         public const string Copyright   = "(C) 2026 Kolog898";
-        public const string BuildDate   = "2026-05-17";
-        public const string GitVersion  = "b80b6c9";
+        public const string BuildDate   = "2026-05-18";
+        public const string GitVersion  = "752ee31";
     }
 }

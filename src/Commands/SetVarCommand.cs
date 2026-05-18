@@ -1,44 +1,26 @@
 using System;
-using System.Collections.Generic;
 
 namespace PowerShellController
 {
-    public class PrintCommand : ICommand
+    /// <summary>
+    /// setvar コマンド
+    /// 変数を ExecutionContext に設定する。
+    /// </summary>
+    public class SetVarCommand : ICommand
     {
         public string Name
         {
-            get { return "print"; }
+            get { return "setvar"; }
         }
 
         public void Execute(string arg, ExecutionContext ctx)
         {
             var parts = arg.Split(new[] { ' ' }, 2);
-            string colorName = parts[0];
-            string text = (parts.Length == 2) ? parts[1] : parts[0];
-
-            ConsoleColor col;
-            var map = new Dictionary<string, ConsoleColor>(StringComparer.OrdinalIgnoreCase)
+            if (parts.Length == 2)
             {
-                { "red", ConsoleColor.Red },
-                { "green", ConsoleColor.Green },
-                { "yellow", ConsoleColor.Yellow },
-                { "blue", ConsoleColor.Blue },
-                { "cyan", ConsoleColor.Cyan },
-                { "magenta", ConsoleColor.Magenta },
-                { "white", ConsoleColor.White },
-                { "gray", ConsoleColor.Gray }
-            };
-
-            if (map.TryGetValue(colorName, out col))
-            {
-                var old = Console.ForegroundColor;
-                Console.ForegroundColor = col;
-                Console.WriteLine(ctx.Expand(text));
-                Console.ForegroundColor = old;
-            }
-            else
-            {
-                Console.WriteLine(ctx.Expand(arg));
+                string key = parts[0];
+                string value = parts[1];
+                ctx.SetVar(key, ctx.Expand(value));
             }
         }
     }

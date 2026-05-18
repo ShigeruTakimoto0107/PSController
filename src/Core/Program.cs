@@ -52,7 +52,7 @@ namespace PowerShellController
                     // ============================
                     lock (PowerShellHost.WaitLock)
                     {
-                        if (PowerShellHost.WaitActive)
+                        if (PowerShellHost.WaitActive  && !skipFirstPrompt)
                         {
                             PowerShellHost.WaitBuffer.Append(char.ToLower(c));
 
@@ -80,6 +80,7 @@ namespace PowerShellController
                         }
 
                         Console.Write(buffer);
+                        PowerShellHost.PromptWritten = true;  // ← 追加
                         buffer = "";
                         continue;
                     }
@@ -137,12 +138,14 @@ namespace PowerShellController
 
             Console.Clear();
 
-            if (lines != null)
-            {
-                foreach (string line in lines)
-                    registry.Execute(line, ctx);
-            }
+			if (lines != null)
+			{
+			    foreach (string line in lines)
+			        registry.Execute(line, ctx);
 
+			    // マクロ終了後、プロンプトを引き出すために空コマンドを送信
+			    PowerShellHost.SendToPowerShell("");
+			}
             // ============================
             // インタラクティブ入力ループ
             // ============================

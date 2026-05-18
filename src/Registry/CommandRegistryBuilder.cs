@@ -217,7 +217,11 @@ namespace PowerShellController
                     case "green": color = ConsoleColor.Green; break;
                     default: color = ConsoleColor.White; break;
                 }
-
+                if (PowerShellHost.PromptWritten)
+                {
+                    Console.WriteLine();
+                    PowerShellHost.PromptWritten = false;  // ← 出力したらリセット
+                }
                 PowerShellHost.WriteLineColored(message, color);
             });
         }
