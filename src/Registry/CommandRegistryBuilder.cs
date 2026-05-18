@@ -7,13 +7,13 @@ namespace PowerShellController
         public static void Build(CommandRegistry registry)
         {
             // WAIT
-            registry.Register("wait", (arg, ctx) =>
-            {
-                if (string.IsNullOrEmpty(arg)) return;
-                PowerShellHost.BeginWait(arg);
-                PowerShellHost.WaitUntilMatched();
-            });
-
+			registry.Register("wait", (arg, ctx) =>
+			{
+			    if (string.IsNullOrEmpty(arg)) return;
+			    PowerShellHost.BeginWait(arg);
+			    PowerShellHost.WaitUntilMatched();
+			    PowerShellHost.PromptWritten = true;  // 検出済み
+			});
             // WAITTO
             registry.Register("waitto", (arg, ctx) =>
             {
@@ -30,9 +30,9 @@ namespace PowerShellController
                 string pattern = parts[1];
 
                 PowerShellHost.BeginWait(pattern);
-                bool ok = PowerShellHost.WaitUntilMatched(timeoutMs);
-
-                ctx.LastWaitResult = ok;
+				bool ok = PowerShellHost.WaitUntilMatched(timeoutMs);
+				PowerShellHost.PromptWritten = true;  // マッチでもタイムアウトでも同じ
+				ctx.LastWaitResult = ok;
             });
 
             // IF
@@ -166,8 +166,14 @@ namespace PowerShellController
                         Console.WriteLine(ctx.Expand(arg));
                         return;
                 }
+                if (PowerShellHost.PromptWritten)
+                {
+                    Console.WriteLine();
+                    PowerShellHost.PromptWritten = false;
+                }
 
                 PowerShellHost.WriteLineColored(message, color);
+
             });
 
             // SETVAR
@@ -186,6 +192,7 @@ namespace PowerShellController
             {
                 if (string.IsNullOrEmpty(arg)) return;
                 PowerShellHost.SendToPowerShell(ctx.Expand(arg));
+               
             });
 
             // SENDLN
@@ -193,37 +200,25 @@ namespace PowerShellController
             {
                 if (string.IsNullOrEmpty(arg)) return;
                 PowerShellHost.SendToPowerShell(ctx.Expand(arg) + "\n");
+                
             });
 
-            // VER（print green）
-            registry.Register("ver", (arg, ctx) =>
-            {
-                string line =
-                    VersionInfo.ProgramName + " " +
-                    VersionInfo.Version + " (" +
-                    VersionInfo.BuildDate + ", " +
-                    VersionInfo.GitVersion + ")";
+			registry.Register("ver", (arg, ctx) =>
+			{
+			    string line =
+			        VersionInfo.ProgramName + " " +
+			        VersionInfo.Version + " (" +
+			        VersionInfo.BuildDate + ", " +
+			        VersionInfo.GitVersion + ")";
 
-                // Invoke は存在しない → print のロジックを直接呼ぶ
-                var printParts = ("green " + line).Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
-
-                string colorName = printParts[0];
-                string message = (printParts.Length >= 2) ? printParts[1] : "";
-
-                ConsoleColor color;
-
-                switch (colorName)
-                {
-                    case "green": color = ConsoleColor.Green; break;
-                    default: color = ConsoleColor.White; break;
-                }
-                if (PowerShellHost.PromptWritten)
-                {
-                    Console.WriteLine();
-                    PowerShellHost.PromptWritten = false;  // ← 出力したらリセット
-                }
-                PowerShellHost.WriteLineColored(message, color);
-            });
+			    if (PowerShellHost.PromptWritten)
+			    {
+			        Console.WriteLine();
+			        PowerShellHost.PromptWritten = false;
+			    }
+			    PowerShellHost.WriteLineColored(line, ConsoleColor.Green);
+			    
+			});
         }
     }
 }

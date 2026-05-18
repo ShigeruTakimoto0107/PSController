@@ -9,9 +9,7 @@ namespace PowerShellController
     {
         static Process process;
         static string lastUserInput = null;
-        static bool skipFirstPrompt = true;
-        static bool skipNextNewline = false;
-
+        
         static int Main(string[] args)
         {
             List<string> lines = null;
@@ -28,9 +26,6 @@ namespace PowerShellController
             psi.Arguments = "-NoExit -ExecutionPolicy Bypass";
 
             process = Process.Start(psi);
-
-            process.StandardInput.WriteLine("");
-            process.StandardInput.Flush();
 
             // ============================
             // 標準出力監視タスク
@@ -52,7 +47,7 @@ namespace PowerShellController
                     // ============================
                     lock (PowerShellHost.WaitLock)
                     {
-                        if (PowerShellHost.WaitActive  && !skipFirstPrompt)
+                        if (PowerShellHost.WaitActive)
                         {
                             PowerShellHost.WaitBuffer.Append(char.ToLower(c));
 
@@ -69,32 +64,16 @@ namespace PowerShellController
                     // ============================
 
                     // プロンプト検出
-                    if (buffer.EndsWith("> "))
-                    {
-                        if (skipFirstPrompt)
-                        {
-                            skipFirstPrompt = false;
-                            skipNextNewline = true;
-                            buffer = "";
-                            continue;
-                        }
-
-                        Console.Write(buffer);
-                        PowerShellHost.PromptWritten = true;  // ← 追加
-                        buffer = "";
-                        continue;
-                    }
-
+					if (buffer.EndsWith("> "))
+					{
+					    Console.Write(buffer);
+					    PowerShellHost.PromptWritten = true;
+					    buffer = "";
+					    continue;
+					}
                     // 改行処理
                     if (c == '\n')
                     {
-                        if (skipNextNewline)
-                        {
-                            skipNextNewline = false;
-                            buffer = "";
-                            continue;
-                        }
-
                         string line = buffer.TrimEnd('\r', '\n');
 
                         // ユーザー入力のエコーバック抑制
@@ -143,10 +122,23 @@ namespace PowerShellController
 			    foreach (string line in lines)
 			        registry.Execute(line, ctx);
 
-			    // マクロ終了後、プロンプトを引き出すために空コマンドを送信
-			    PowerShellHost.SendToPowerShell("");
+				// Sleepをやめて、プロンプトが来るまで最大1秒待つ
+				int waited = 0;
+				while (!PowerShellHost.PromptWritten && waited < 1000)
+				{
+				    System.Threading.Thread.Sleep(50);
+				    waited += 50;
+				}
+
+				if (!PowerShellHost.PromptWritten)
+				{
+				    PowerShellHost.BeginWait(">");
+				    PowerShellHost.SendToPowerShell("");
+				    PowerShellHost.WaitUntilMatched(3000);
+				    System.Threading.Thread.Sleep(100);
+				}
 			}
-            // ============================
+			// ============================
             // インタラクティブ入力ループ
             // ============================
             while (true)
