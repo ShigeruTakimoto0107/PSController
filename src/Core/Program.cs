@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;      // ← 追加
 using System.Threading.Tasks;
 
 namespace PowerShellController
@@ -149,17 +150,23 @@ namespace PowerShellController
 			// ============================
             // インタラクティブ入力ループ
             // ============================
-            while (true)
-            {
-                string input = Console.ReadLine();
+			while (true)
+			{
+			    string input = Console.ReadLine();
 
-                if (!string.IsNullOrEmpty(input))
-                    lastUserInput = input;
-                else
-                    lastUserInput = null;
+			    if (!string.IsNullOrEmpty(input))
+			        lastUserInput = input;
+			    else
+			        lastUserInput = null;
 
-                PowerShellHost.SendToPowerShell(input);
-            }
+			    PowerShellHost.SendToPowerShell(input);
+
+			    if (string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
+			    {
+			        Thread.Sleep(200);
+			        Environment.Exit(0);
+			    }
+			}
         }
     }
 }
