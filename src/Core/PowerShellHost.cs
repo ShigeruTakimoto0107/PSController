@@ -13,7 +13,12 @@ namespace PowerShellController
         internal static string WaitPattern = null;
         internal static bool WaitActive = false;
 
+
         public static Action<string> SendToPowerShell { get; set; }
+
+		// プロンプトパターン（デフォルトは >）
+		public static string PromptPattern = ">";
+
         // プロンプトが出力済みかどうか
         public static bool PromptWritten = false;
 

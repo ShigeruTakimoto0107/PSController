@@ -219,6 +219,13 @@ namespace PowerShellController
 			    PowerShellHost.WriteLineColored(line, ConsoleColor.Green);
 			    
 			});
+			
+			// SETPROMPT
+			registry.Register("setprompt", (arg, ctx) =>
+			{
+			    if (string.IsNullOrEmpty(arg)) return;
+			    PowerShellHost.PromptPattern = arg.Trim();
+			});			
         }
     }
 }

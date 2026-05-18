@@ -64,7 +64,7 @@ namespace PowerShellController
                     // ============================
 
                     // プロンプト検出
-					if (buffer.EndsWith("> "))
+					if (buffer.EndsWith(PowerShellHost.PromptPattern + " "))
 					{
 					    Console.Write(buffer);
 					    PowerShellHost.PromptWritten = true;
