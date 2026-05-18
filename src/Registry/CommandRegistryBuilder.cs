@@ -187,21 +187,21 @@ namespace PowerShellController
                 ctx.SetVar(parts[0], ctx.Expand(parts[1]));
             });
 
-            // RAWTEXT
-            registry.Register("rawtext", (arg, ctx) =>
-            {
-                if (string.IsNullOrEmpty(arg)) return;
-                PowerShellHost.SendToPowerShell(ctx.Expand(arg));
-               
-            });
+			// SENDLN
+			registry.Register("sendln", (arg, ctx) =>
+			{
+			    if (string.IsNullOrEmpty(arg)) return;
 
-            // SENDLN
-            registry.Register("sendln", (arg, ctx) =>
-            {
-                if (string.IsNullOrEmpty(arg)) return;
-                PowerShellHost.SendToPowerShell(ctx.Expand(arg) + "\n");
-                
-            });
+			    if (!PowerShellHost.PromptWritten)
+			    {
+			        throw new MacroAbortException(
+			            "[ERROR] sendln: プロンプト未確認です。事前に wait > を実行してください。");
+			    }
+
+			    string expanded = ctx.Expand(arg);
+			    PowerShellHost.PromptWritten = false;
+			    PowerShellHost.SendToPowerShell(expanded);
+			});
 
 			registry.Register("ver", (arg, ctx) =>
 			{

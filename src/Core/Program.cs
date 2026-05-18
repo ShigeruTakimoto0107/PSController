@@ -119,8 +119,17 @@ namespace PowerShellController
 
 			if (lines != null)
 			{
-			    foreach (string line in lines)
-			        registry.Execute(line, ctx);
+			    try  // ← 追加
+			    {
+			        foreach (string line in lines)
+			            registry.Execute(line, ctx);
+			    }
+			    catch (MacroAbortException ex)  // ← 追加
+			    {
+			        Console.ForegroundColor = ConsoleColor.Red;
+			        Console.WriteLine(ex.Message);
+			        Console.ResetColor();
+			    }
 
 				// Sleepをやめて、プロンプトが来るまで最大1秒待つ
 				int waited = 0;
