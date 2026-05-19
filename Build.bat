@@ -30,6 +30,7 @@ if not defined CSC_PATH (
 )
 
 set TARGET_EXE=PowerShellController.exe
+set TEST_MACRO=test_all.psm
 
 echo Using: %CSC_PATH%
 echo [BUILD] Compiling PowerShellController Project...
@@ -75,13 +76,13 @@ set BUILD_DATE=%YYYY%-%MM%-%DD%
 :: ============================================================
 (
 echo namespace PowerShellController {
-echo     public static class VersionInfo {
-echo         public const string ProgramName = "PowerShellController";
-echo         public const string Version     = "1.0.0";
-echo         public const string Copyright   = "(C) 2026 Kolog898";
-echo         public const string BuildDate   = "%BUILD_DATE%";
-echo         public const string GitVersion  = "%GIT_VER%";
-echo     }
+echo      public static class VersionInfo {
+echo          public const string ProgramName = "PowerShellController";
+echo          public const string Version     = "1.0.0";
+echo          public const string Copyright   = "(C) 2026 Kolog898";
+echo          public const string BuildDate   = "%BUILD_DATE%";
+echo          public const string GitVersion  = "%GIT_VER%";
+echo      }
 echo }
 ) > .\src\Core\VersionInfo.cs
 
@@ -104,15 +105,27 @@ echo }
  .\src\Meta\*.cs ^
  .\src\System\*.cs
 
-
-pause
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] %TARGET_EXE% has been built.
-    echo [INFO] Running %TARGET_EXE%...
+    echo --------------------------------------------------
+    
+    :: テスト実行の確認プロンプト（デフォルトY）
+    set /p CHOICE="[QUESTION] 全コマンド確認マクロを実行しますか？ [Y/N] (Default:Y): "
+    if /i "!CHOICE!"=="N" (
+        echo [INFO] テスト実行をスキップして終了します。
+        goto END_PROCESS
+    )
+    
+    echo [INFO] 全コマンド確認自動テストを実行します...
     cls
-    .\bin\%TARGET_EXE%
+    
+    :: コンパイルされたEXEにテストマクロファイルを引数で渡して実行
+    .\bin\%TARGET_EXE% .\bin\%TEST_MACRO%
 ) else (
     echo [FAILED] Compilation error.
 )
 
+:END_PROCESS
+echo --------------------------------------------------
+echo [INFO] Build and Test process finished.
 pause
