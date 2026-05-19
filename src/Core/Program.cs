@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;      // ← 追加
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PowerShellController
@@ -65,13 +65,13 @@ namespace PowerShellController
                     // ============================
 
                     // プロンプト検出
-					if (buffer.EndsWith(PowerShellHost.PromptPattern + " "))
-					{
-					    Console.Write(buffer);
-					    PowerShellHost.PromptWritten = true;
-					    buffer = "";
-					    continue;
-					}
+                    if (buffer.EndsWith(PowerShellHost.PromptPattern + " "))
+                    {
+                        Console.Write(buffer);
+                        PowerShellHost.PromptWritten = true;
+                        buffer = "";
+                        continue;
+                    }
                     // 改行処理
                     if (c == '\n')
                     {
@@ -110,6 +110,10 @@ namespace PowerShellController
             // ExecutionContext に registry を渡す
             var ctx = new ExecutionContext(registry);
 
+            // ★ マクロファイルパスを ctx に渡す
+            if (args.Length >= 1)
+                ctx.MacroFilePath = args[0];
+
             PowerShellHost.SendToPowerShell = delegate(string cmd)
             {
                 process.StandardInput.WriteLine(cmd);
@@ -117,84 +121,84 @@ namespace PowerShellController
             };
 
             Console.Clear();
-			if (lines != null)
-			{
-			    try
-			    {
-			        for (int i = 0; i < lines.Count; i++)
-			        {
-			            // loop コマンドでループ先頭インデックスを記録
-			            string trimmed = lines[i].Trim();
-			            if (trimmed.StartsWith("loop", StringComparison.OrdinalIgnoreCase) &&
-			                !trimmed.StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
-			            {
-			                ctx.LoopStartIndex = i;
-			            }
 
-			            registry.Execute(lines[i], ctx);
+            if (lines != null)
+            {
+                try
+                {
+                    for (int i = 0; i < lines.Count; i++)
+                    {
+                        // loop コマンドでループ先頭インデックスを記録
+                        string trimmed = lines[i].Trim();
+                        if (trimmed.StartsWith("loop", StringComparison.OrdinalIgnoreCase) &&
+                            !trimmed.StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ctx.LoopStartIndex = i;
+                        }
 
-			            // BreakRequested 中は endloop まで読み飛ばす
-			            if (ctx.BreakRequested)
-			            {
-			                while (i < lines.Count &&
-			                    !lines[i].Trim().StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
-			                {
-			                    i++;
-			                }
-			                continue;
-			            }
+                        registry.Execute(lines[i], ctx);
 
-			            // endloop でループ先頭に戻る
-			            if (ctx.LoopBackRequested)
-			            {
-			                i = ctx.LoopStartIndex - 1;
-			                ctx.LoopBackRequested = false;
-			            }
-			        }
-			    }
-			    catch (MacroAbortException ex)
-			    {
-			        Console.ForegroundColor = ConsoleColor.Red;
-			        Console.WriteLine(ex.Message);
-			        Console.ResetColor();
-			    }
+                        // BreakRequested 中は endloop まで読み飛ばす
+                        if (ctx.BreakRequested)
+                        {
+                            while (i < lines.Count &&
+                                !lines[i].Trim().StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
+                            {
+                                i++;
+                            }
+                            continue;
+                        }
 
+                        // endloop でループ先頭に戻る
+                        if (ctx.LoopBackRequested)
+                        {
+                            i = ctx.LoopStartIndex - 1;
+                            ctx.LoopBackRequested = false;
+                        }
+                    }
+                }
+                catch (MacroAbortException ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ex.Message);
+                    Console.ResetColor();
+                }
 
-				// Sleepをやめて、プロンプトが来るまで最大1秒待つ
-				int waited = 0;
-				while (!PowerShellHost.PromptWritten && waited < 1000)
-				{
-				    System.Threading.Thread.Sleep(50);
-				    waited += 50;
-				}
+                // プロンプトが来るまで最大1秒待つ
+                int waited = 0;
+                while (!PowerShellHost.PromptWritten && waited < 1000)
+                {
+                    System.Threading.Thread.Sleep(50);
+                    waited += 50;
+                }
 
-				// マクロ終了後は常に空コマンドでプロンプトを出す
-				PowerShellHost.PromptWritten = false;
-				PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
-				PowerShellHost.SendToPowerShell("");
-				PowerShellHost.WaitUntilMatched(3000);
-				
-			}
-			// ============================
+                // マクロ終了後は常に空コマンドでプロンプトを出す
+                PowerShellHost.PromptWritten = false;
+                PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
+                PowerShellHost.SendToPowerShell("");
+                PowerShellHost.WaitUntilMatched(3000);
+            }
+
+            // ============================
             // インタラクティブ入力ループ
             // ============================
-			while (true)
-			{
-			    string input = Console.ReadLine();
+            while (true)
+            {
+                string input = Console.ReadLine();
 
-			    if (!string.IsNullOrEmpty(input))
-			        lastUserInput = input;
-			    else
-			        lastUserInput = null;
+                if (!string.IsNullOrEmpty(input))
+                    lastUserInput = input;
+                else
+                    lastUserInput = null;
 
-			    PowerShellHost.SendToPowerShell(input);
+                PowerShellHost.SendToPowerShell(input);
 
-			    if (string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
-			    {
-			        Thread.Sleep(200);
-			        Environment.Exit(0);
-			    }
-			}
+                if (string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
+                {
+                    Thread.Sleep(200);
+                    Environment.Exit(0);
+                }
+            }
         }
     }
 }

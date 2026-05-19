@@ -20,6 +20,7 @@ namespace PowerShellController
             new LoopCommand().Register(registry);
             new EndLoopCommand().Register(registry);
             new BreakCommand().Register(registry);
+            new AdminCommand().Register(registry);
         }
     }
 }

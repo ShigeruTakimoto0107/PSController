@@ -76,5 +76,8 @@ namespace PowerShellController
 		public bool BreakRequested { get; set; }
 		public bool LoopBackRequested { get; set; }
         
+        // マクロファイルパス（admin コマンドで使用）
+		public string MacroFilePath { get; set; }
+        
     }
 }
