@@ -15,9 +15,12 @@ namespace PowerShellController
             {
                 for (int i = 0; i < lines.Count; i++)
                 {
-                    // call 中でない場合、ラベル行に到達したら終了
-                    if (!ctx.IsInCall && lines[i].Text.StartsWith(":"))
-                        break;
+                    // ラベル行はスキップ（call中でない場合も continue）
+                    if (lines[i].Text.StartsWith(":"))
+                    {
+                        if (!ctx.IsInCall)
+                            continue;
+                    }
 
                     // 現在実行中の行を記録
                     currentLine = lines[i];
@@ -41,6 +44,9 @@ namespace PowerShellController
                         {
                             i++;
                         }
+                        // endloop を実行して BreakRequested をリセット
+                        if (i < lines.Count)
+                            registry.Execute(lines[i].Text, ctx);
                         continue;
                     }
 
@@ -116,16 +122,16 @@ namespace PowerShellController
                     }
                 }
             }
-			catch (MacroAbortException ex)
-			{
-			    // 非同期出力が来るまで少し待つ
-			    System.Threading.Thread.Sleep(300);
-			    Console.WriteLine();
-			    Console.ForegroundColor = ConsoleColor.Red;
-			    string location = currentLine != null ? " " + currentLine.Location : "";
-			    Console.WriteLine(ex.Message + location);
-			    Console.ResetColor();
-			}
+            catch (MacroAbortException ex)
+            {
+                // 非同期出力が来るまで少し待つ
+                System.Threading.Thread.Sleep(300);
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Red;
+                string location = currentLine != null ? " " + currentLine.Location : "";
+                Console.WriteLine(ex.Message + location);
+                Console.ResetColor();
+            }
 
             // プロンプトが来るまで最大1秒待つ
             int waited = 0;
