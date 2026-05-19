@@ -98,13 +98,18 @@ echo }
  .\src\Core\*.cs ^
  .\src\Parser\*.cs ^
  .\src\Registry\*.cs ^
- .\src\Commands\*.cs
+ .\src\Commands\*.cs ^
+ .\src\Flow\*.cs ^
+ .\src\IO\*.cs ^
+ .\src\Meta\*.cs ^
+ .\src\System\*.cs
 
 
 pause
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] %TARGET_EXE% has been built.
     echo [INFO] Running %TARGET_EXE%...
+    cls
     .\bin\%TARGET_EXE%
 ) else (
     echo [FAILED] Compilation error.
