@@ -1,42 +1,43 @@
 # PowerShellController (PSController)
 
-Windowsのエンタープライズ運用管理を劇的に効率化する、堅牢かつ軽量なPowerShell自動化コントローラ。
+Windows標準のPowerShellを、TeraTermマクロやJCL、あるいはAccessマクロのような直感的で懐かしい「手続き型スクリプト」の感覚で完全掌握する軽量自動化コントローラ。
 
-PowerShellを外部プロセスとして安全に起動・制御し、独自のマクロファイル (.psm) を用いて、これまで自動化が困難だった「対話的なプロンプト操作」を完全自動化します。
+外部プロセスとして分離されたPowerShellの入出力をミリ秒単位でリアルタイム監視し、独自のマクロファイル (.psm) によって対話的なオペレーションをノンプログラミングで100%自動化します。
 
 
-## 設計思想と強力な特徴（大企業・本番環境向け安全設計）
+## あなたの知的好奇心を刺激する、無限の拡張性
 
-1. Windows標準環境のみでビルドおよび動作（究極のゼロ・ディペンデンシー）
-大企業のエンタープライズ・本番環境や、インターネットから隔離された高セキュリティエリアでは、Visual Studio等の巨大な開発ランタイムを持ち込むことはおろか、外部バイナリ（EXE）の搬入すら厳しいセキュリティ審査が課されます。
-本ツールは、Windowsに標準で100%同梱されている.NETのC#コンパイラ（csc.exe）を自動探索する「ビルド用バッチファイル(build.bat)」を同梱。リポジトリからソースコードだけを安全にテキスト搬入すれば、Visual Studio不要でその場で1秒で100%ネイティブなバイナリ（EXE）をビルドして実行可能です。
+本ツールは単なるコマンド送出機ではありません。操作対象となるPowerShellの環境を充実させることで、その自動化領域は爆発的に広がります。
 
-2. 冷徹な「Fail Fast（事前条件違反の即時停止）」による環境保護
-不整合を検知したままマクロが暴走し、本番環境を破壊することを絶対に防ぎます。期待するプロンプトが指定時間内に返ってこない場合や、事前条件に1ミリでも違反（Violation）を検知した瞬間、ツールが冷徹に処理をミリ秒単位で即時強制停止（Terminate）します。安全性が確認できない限り、次の一手は絶対に実行しません。
+- ブラウザ自動化 (SeleniumやPlaywrightとの連携)
+- Microsoft TeamsやSharePointなどの各種SaaS自動化
+- Office製品や各種社内業務システムのシームレスな制御
 
-3. タスクマネージャーの可読性とセキュリティ
-バックグラウンド実行時や監査ログ監視時、不審なプロセスとして誤認されやすい「3文字の謎のEXE」ではなく、「PowerShellController.exe」という規律正しいプロセス名で明示的に動作。企業のインフラ監査や情シスのセキュリティ審査をスムーズに通過します。
+マクロによる極めてシンプルな記述でありながら、その実態は完全なプログラム。ロジックの組み方次第で、Power Automateや高価なRPAツールをも凌駕する、美しく強力な自動化環境をあなた自身のコードで組み上げることができます。
 
-4. 未登録コマンドのネイティブ透過送信
-マクロ言語にない高度なPowerShellコマンドや独自の関数は、コントローラを素通りしてそのままPowerShellプロセスに透過送信されます。マクロのシンプルさと、PowerShellの強力な表現力を100%両立します。
+
+## 導入は「ソースを落として叩くだけ」
+
+大掛かりな開発環境のインストールは必要ありません。本リポジトリのソースコード一式をローカル環境にダウンロードし、同梱されている「build.bat」を実行するだけで、Windowsに標準搭載されているC#コンパイラ(csc.exe)が自動探索され、その場でネイティブな実行バイナリ(PowerShellController.exe)が生成されます。
+
+Visual Studio不要。依存関係ゼロ。テキストを搬入できる環境さえあれば、1秒で即座に稼働させることができます。
 
 
 ## ディレクトリ構成
 
-大企業のデプロイ手順書や構成管理にそのまま組み込める、美しく洗練されたディレクトリ構造を採用しています。
-ビルド成果物（binやlogsフォルダ）はソースコード管理（Git）から自動的に排除され、常にクリーンな状態を保ちます。
-```
-PSController
+```text
+Root
 │  Build.bat          (Visual Studio不要の超軽量コンパイルスクリプト)
 │  LICENSE            (MITライセンス公開ファイル)
 │  readme.md          (本ドキュメント)
+│  Reorganize.bat     (ソース配置・整理用スクリプト)
 │
 ├─ico
 │      PSC.ico        (生成されるEXEに埋め込まれる専用アイコン)
 │
 └─src                 (C# ソースコードROOT)
     ├─Commands        (基本マクロコマンド群)
-    │      EchoCommand.cs       (echo on/off エコーバック制御)
+    │      EchoCommand.cs       (echo on/off 行番号付きエコーバック制御)
     │      GetVarCommand.cs     (getvar 変数取得処理)
     │      ICommand.cs          (全コマンドの基底となる共通インターフェース)
     │      PauseCommand.cs      (pause オペレーター確認の一時待機)
@@ -47,7 +48,7 @@ PSController
     │      
     ├─Core            (コントローラの心臓部・実行基盤)
     │      ExecutionContext.cs  (変数の状態やコールスタックを保持する実行コンテキスト)
-    │      MacroAbortException.cs (Fail Fast時に処理を安全かつ即時に引き裂く例外定義)
+    │      MacroAbortException.cs (Fail Fast時に行番号付きで処理を安全に停止させる例外)
     │      MacroRunner.cs       (解析されたマクロを行単位で高速に逐次実行するコア)
     │      PowerShellHost.cs    (PowerShellプロセスとの直接の対話を抽象化するホスト)
     │      PowerShellProcess.cs (外部プロセスとしてPowerShellを安全にハンドリングする実装)
@@ -88,6 +89,7 @@ PSController
            ExitCommand.cs       (exit コントローラの安全な終了処理)
 ```
 
+
 ## 機能概要（マクロコマンド一覧）
 
 - PowerShellの起動と制御：安全な外部プロセス分離
@@ -100,7 +102,7 @@ PSController
 - goto / ラベル：指定ラベルへのジャンプ
 - call / return：サブルーチン呼び出し
 - include：外部マクロファイルの静的展開（共通処理の共通化）
-- echo on / echo off：エコーバック（コマンド非表示）制御
+- echo on / echo off：エコーバック（コマンド非表示）制御、行番号付きのデバッグ追跡
 - print：ログ視認性を高めるカラーメッセージ出力
 - pause：オペレーター確認のための安全な一時待機
 - setprompt：SSH接続先や特権環境に追従する動的プロンプト切り替え
@@ -113,101 +115,122 @@ PSController
 ## マクロ構文の具体例
 
 ### 基本的な対話自動化とFail Fast
-```
-  ; サーバーの初期設定自動化サンプル
-  wait >
-  print cyan サーバー情報取得開始...
-  sendln Get-ComputerInfo
-  wait >
-```
-```
-  ; 特権が必要な処理への移行
-  admin
+
+```text
+; サーバーの初期設定自動化サンプル
+wait >
+print cyan サーバー情報取得開始...
+sendln Get-ComputerInfo
+wait >
+
+; 特権が必要な処理への移行
+admin
 ```
 
 ### 動的プロンプト切り替え（Linux等へのSSHリモート接続）
 Windows標準環境から他セグメントのサーバーやLinuxへ接続し、プロンプトが変わる運用もシームレスに追従します。
+
+```text
+wait >
+sendln ssh user@192.168.1.1
+setprompt $
+wait $
+sendln ls -la
+wait $
+sendln exit
+setprompt >
+wait >
+print green Linuxサーバー内操作および安全なログアウトを完了
 ```
-  wait >
-  sendln ssh user@192.168.1.1
-  setprompt $
-  wait $
-  sendln ls -la
-  wait $
-  sendln exit
-  setprompt >
-  wait >
-  print green Linuxサーバー内操作および安全なログアウトを完了
-```
+
 
 ## 分岐・ループ・サブルーチンの高度な制御
 
 ### goto（ジャンプ）による例外ハンドリング
-```
-  wait >
-  setvar FLAG ng
-  if %FLAG% == ok
-      goto SUCCESS
-  endif
-  goto ERROR
 
-  :SUCCESS
-  print green 処理成功
-  goto END
+```text
+wait >
+setvar FLAG ng
+if %FLAG% == ok
+    goto SUCCESS
+endif
+goto ERROR
 
-  :ERROR
-  print red 事前チェックに失敗したため、安全に分岐します
-  :END
-  print cyan スクリプト終了
+:SUCCESS
+print green 処理成功
+goto END
+
+:ERROR
+print red 事前チェックに失敗したため、安全に分岐します
+:END
+print cyan スクリプト終了
 ```
 
 ### call / return（サブルーチン）
-```
-  wait >
-  call GREET
-  print cyan メイン処理続行
 
-  :GREET
-  print green [Subroutine] 初期化処理を実行中...
-  return
+```text
+wait >
+call GREET
+print cyan メイン処理続行
+
+:GREET
+print green [Subroutine] 初期化処理を実行中...
+return
 ```
-注意：ネストした call（サブルーチン内からのさらに別サブルーチン呼び出し）は Fail Fast 思想に基づきサポートされていません。
+注意：ネストした call（サブルーチン内からのさらに別サブルーチン呼び出し）はサポートされていません。
 
 
 ### include による共通部品化
-```
-  ; main.psm
-  wait >
-  include common.psm
-  print green メイン処理実行
 
-  ; common.psm
-  setvar APP_NAME PowerShellController
-  print cyan %APP_NAME% 共通ライブラリをロードしました
+```text
+; main.psm
+wait >
+include common.psm
+print green メイン処理実行
+
+; common.psm
+setvar APP_NAME PowerShellController
+print cyan %APP_NAME% 共通ライブラリをロードしました
 ```
 - 相対パスは親ファイルのディレクトリを基準とします。
 - 循環参照（AがBを呼び、BがAを呼ぶ）は内部パーサーで自動検出し、実行前に厳格にブロックします。
 
 
-### echo on/off による機密情報の保護
-パスワード入力時や、ログを汚したくない場合は echo off でコンソールの出力を一時的にマスクできます。
+### echo on/off による機密情報の保護とデバッグ
+パスワード入力時やログを汚したくない場合は echo off で出力を一時的にマスクできます。
+また、echo有効時は内部の行番号が合わせて出力されるため、大規模なマクロでもデバッグが容易です。
+
+```text
+wait >
+echo off
+sendln $password = "Secret123"
+wait >
+echo on
+sendln Write-Output "パスワード設定完了"
+wait >
 ```
-  wait >
-  echo off
-  sendln $password = "Secret123"
-  wait >
-  echo on
-  sendln Write-Output "パスワード設定完了"
-  wait >
-```
+
+
+## 本ツールの安全性と基本仕様（アーキテクチャ）
+
+1. 冷徹な「Fail Fast（事前条件違反の即時停止）」
+不整合を検知したままマクロが暴走し、環境を破壊することを絶対に防ぎます。期待するプロンプトが指定時間内に返ってこない場合や、事前条件への違反を検知した瞬間、ツールは処理を即時強制停止（Terminate）します。
+エラー発生時には、マクロのどの部分で問題が起きたかが瞬時に特定できるよう、対象の「行番号」がエラーログに明示的に出力されます。
+
+2. 未登録コマンドのネイティブ透過送信
+マクロ言語にない高度なPowerShellコマンドや独自の関数は、コントローラを素通りしてそのままPowerShellプロセスに透過送信されます。マクロのシンプルさと、PowerShellの強力な表現力を100%両立します。
+
+3. タスクマネージャーの可読性
+バックグラウンド実行時や監査ログ監視時、不審なプロセスとして誤認されやすい「3文字の謎のEXE」ではなく、「PowerShellController.exe」という規律正しいプロセス名で明示的に動作します。
+
 
 ## 免責事項 (Disclaimer)
 
-本ソフトウェアの使用（実行、複製、改変、配布等の一切の行為）に伴い、万が一ユーザーの本番環境、開発環境、システム、データ、ネットワーク、ハードウェア等に損害、損失、障害、データの破損または漏洩、その他いかなる不利益が生じた場合であっても、開発者および著作権者はその理由の如何を問わず、一切の責任（直接損害、間接損害、派生損害、特別損害、逸失利益を含むがこれらに限定されない）を負いません。
+本ソフトウェアの使用（実行、複製、改変、配布等の一切の行為）に伴い、万が一ユーザーの環境、システム、データ、ネットワーク、ハードウェア等に損害、損失、障害、データの破損または漏洩、その他いかなる不利益が生じた場合であっても、開発者および著作権者はその理由の如何を問わず、一切の責任（直接損害、間接損害、派生損害、特別損害、逸失利益を含むがこれらに限定されない）を負いません。
 
 本ソフトウェアは「現状のまま（As Is）」提供され、明示または黙示を問わず、その特定の目的への適合性、機能性、正確性、信頼性、または瑕疵の不在について、開発者は一切の保証をいたしません。マクロの記述および実行にあたっては、ユーザー自身の責任において、事前に十分なテスト環境での検証を行ってください。
 
 
 ## ライセンス
 
-本プロジェクトは MIT License のもとで公開されています。商用利用、改変、再配布が企業内でも自由に行っていただけます。詳細は LICENSE ファイルを参照してください。
+本プロジェクトは MIT License のもとで公開されています。商用利用、改変、再配布が自由にいただけます。詳細は LICENSE ファイルを参照してください。
