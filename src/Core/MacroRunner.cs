@@ -6,31 +6,37 @@ namespace PowerShellController
 {
     public static class MacroRunner
     {
-        public static void Run(List<string> lines, CommandRegistry registry, ExecutionContext ctx)
+        // 現在実行中の行情報（エラーメッセージ用）
+        private static MacroLine currentLine = null;
+
+        public static void Run(List<MacroLine> lines, CommandRegistry registry, ExecutionContext ctx)
         {
             try
             {
                 for (int i = 0; i < lines.Count; i++)
                 {
-                    // call 中でない場合、ラベル行に到達したらそこで終了
-                    if (!ctx.IsInCall && lines[i].Trim().StartsWith(":"))
+                    // call 中でない場合、ラベル行に到達したら終了
+                    if (!ctx.IsInCall && lines[i].Text.StartsWith(":"))
                         break;
 
+                    // 現在実行中の行を記録
+                    currentLine = lines[i];
+
                     // loop コマンドでループ先頭インデックスを記録
-                    string trimmed = lines[i].Trim();
+                    string trimmed = lines[i].Text.Trim();
                     if (trimmed.StartsWith("loop", StringComparison.OrdinalIgnoreCase) &&
                         !trimmed.StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
                     {
                         ctx.LoopStartIndex = i;
                     }
 
-                    registry.Execute(lines[i], ctx);
+                    registry.Execute(lines[i].Text, ctx);
 
                     // BreakRequested 中は endloop まで読み飛ばす
                     if (ctx.BreakRequested)
                     {
                         while (i < lines.Count &&
-                            !lines[i].Trim().StartsWith("endloop",
+                            !lines[i].Text.Trim().StartsWith("endloop",
                                 StringComparison.OrdinalIgnoreCase))
                         {
                             i++;
@@ -54,7 +60,7 @@ namespace PowerShellController
                         bool found = false;
                         for (int j = 0; j < lines.Count; j++)
                         {
-                            if (string.Equals(lines[j].Trim(), label,
+                            if (string.Equals(lines[j].Text.Trim(), label,
                                 StringComparison.OrdinalIgnoreCase))
                             {
                                 i = j;
@@ -77,7 +83,7 @@ namespace PowerShellController
                         bool found = false;
                         for (int j = 0; j < lines.Count; j++)
                         {
-                            if (string.Equals(lines[j].Trim(), label,
+                            if (string.Equals(lines[j].Text.Trim(), label,
                                 StringComparison.OrdinalIgnoreCase))
                             {
                                 ctx.CallReturnIndex = i + 1;
@@ -112,10 +118,12 @@ namespace PowerShellController
             }
 			catch (MacroAbortException ex)
 			{
-			    if (PowerShellHost.PromptWritten)
-			        Console.WriteLine();
+			    // 非同期出力が来るまで少し待つ
+			    System.Threading.Thread.Sleep(300);
+			    Console.WriteLine();
 			    Console.ForegroundColor = ConsoleColor.Red;
-			    Console.WriteLine(ex.Message);
+			    string location = currentLine != null ? " " + currentLine.Location : "";
+			    Console.WriteLine(ex.Message + location);
 			    Console.ResetColor();
 			}
 

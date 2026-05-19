@@ -6,12 +6,12 @@ namespace PowerShellController
 {
     public static class MacroLoader
     {
-        public static List<string> Load(string path)
+        public static List<MacroLine> Load(string path)
         {
             return LoadInternal(path, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
         }
 
-        private static List<string> LoadInternal(string path, HashSet<string> loaded)
+        private static List<MacroLine> LoadInternal(string path, HashSet<string> loaded)
         {
             // 循環参照防止
             string fullPath = Path.GetFullPath(path);
@@ -20,14 +20,18 @@ namespace PowerShellController
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("[WARN] include: 循環参照を検出しました: " + fullPath);
                 Console.ResetColor();
-                return new List<string>();
+                return new List<MacroLine>();
             }
             loaded.Add(fullPath);
 
-            var list = new List<string>();
+            string fileName = Path.GetFileName(fullPath);
+            var list = new List<MacroLine>();
+            int lineNumber = 0;
 
             foreach (var raw in File.ReadAllLines(fullPath))
             {
+                lineNumber++;
+
                 // 空行・空白行は無視
                 if (string.IsNullOrWhiteSpace(raw))
                     continue;
@@ -46,7 +50,7 @@ namespace PowerShellController
                     if (string.IsNullOrEmpty(arg))
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("[ERROR] include: ファイルパスが指定されていません。");
+                        Console.WriteLine("[ERROR] include: ファイルパスが指定されていません。 [" + fileName + ":" + lineNumber + "]");
                         Console.ResetColor();
                         continue;
                     }
@@ -58,7 +62,7 @@ namespace PowerShellController
                     if (!File.Exists(arg))
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("[ERROR] include: ファイルが見つかりません: " + arg);
+                        Console.WriteLine("[ERROR] include: ファイルが見つかりません: " + arg + " [" + fileName + ":" + lineNumber + "]");
                         Console.ResetColor();
                         continue;
                     }
@@ -69,7 +73,7 @@ namespace PowerShellController
                 }
 
                 // 実行対象行として追加
-                list.Add(line);
+                list.Add(new MacroLine(line, fileName, lineNumber));
             }
 
             return list;

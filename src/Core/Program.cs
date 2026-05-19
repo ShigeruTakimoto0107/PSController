@@ -9,7 +9,7 @@ namespace PowerShellController
         static int Main(string[] args)
         {
             // マクロファイル読み込み
-            List<string> lines = null;
+            List<MacroLine> lines = null;
             if (args.Length >= 1)
                 lines = MacroLoader.Load(args[0]);
 
