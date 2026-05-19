@@ -1,10 +1,10 @@
 # PowerShellController (PSController)
 
-PowerShellController は、PowerShell を外部プロセスとして起動し、  
-**マクロファイル (.macro)** を用いて PowerShell を自動操作するための軽量コントローラです。
+PowerShellController は、PowerShell を外部プロセスとして起動し、
+**マクロファイル (.psm)** を用いて PowerShell を自動操作する軽量コントローラです。
 
-PowerShell の標準出力をリアルタイムで監視し、  
-マクロコマンドを逐次実行することで、  
+PowerShell の標準出力をリアルタイムで監視し、
+マクロコマンドを逐次実行することで、
 **対話的な PowerShell 操作を完全自動化**できます。
 
 ---
@@ -12,15 +12,21 @@ PowerShell の標準出力をリアルタイムで監視し、
 ## 機能概要
 
 - PowerShell の起動と制御
-- マクロファイル (.macro) の実行
+- マクロファイル (.psm) の実行
 - `sendln` による PowerShell へのコマンド送信
 - `wait` / `waitto` による出力待機
 - `setvar` による変数展開（`%VAR%` 形式）
 - `if` / `elseif` / `else` / `endif` による条件分岐
+- `loop` / `endloop` / `break` による繰り返し処理
 - `print` によるカラーメッセージ出力
+- `pause` による待機
+- `setprompt` による動的プロンプト切り替え
+- `admin` による管理者権限での自動再起動
+- `.logopen` / `.logclose` によるトランスクリプト記録
 - `ver` によるバージョン情報表示
-- 起動直後のプロンプト誤検出防止ロジック搭載
-- マクロ終了後のインタラクティブ入力への自動移行
+- `exit` による PSC 終了
+- 未登録コマンドはそのまま PowerShell に送信
+- Fail Fast：事前条件違反は即エラー停止
 
 ---
 
@@ -28,13 +34,21 @@ PowerShell の標準出力をリアルタイムで監視し、
 
 ```
 PSController/
-├── macros/          # マクロファイル置き場
+├── bin/       # ビルド成果物
+├── ico/       # アイコン
+├── logs/      # ログ置き場
+├── macros/    # マクロファイル置き場
+├── ps1/       # スクリプト置き場
 ├── src/
-│   ├── Commands/    # 各コマンドの実装
-│   ├── Core/        # エントリーポイント・PowerShellホスト・実行コンテキスト
-│   ├── Parser/      # マクロファイルのパース処理
-│   └── Registry/    # コマンド登録・ビルド処理
-├── Build.bat        # ビルドスクリプト
+│   ├── Commands/
+│   ├── Core/
+│   ├── Flow/
+│   ├── IO/
+│   ├── Meta/
+│   ├── Parser/
+│   ├── Registry/
+│   └── System/
+├── Build.bat
 └── readme.md
 ```
 
@@ -46,39 +60,79 @@ PSController/
 
 | ファイル名 | 説明 |
 |---|---|
-| `Program.cs` | エントリーポイント。PowerShellプロセス起動・出力監視・インタラクティブループ |
-| `PowerShellHost.cs` | WAITバッファ管理・出力待機・カラー出力などのホスト機能 |
-| `ExecutionContext.cs` | 変数ストア・条件制御フラグ・`%VAR%`展開 |
+| `Program.cs` | エントリーポイント |
+| `PowerShellProcess.cs` | プロセス起動・出力監視 |
+| `MacroRunner.cs` | マクロ実行ループ |
+| `PowerShellHost.cs` | WAITバッファ・出力待機・カラー出力 |
+| `ExecutionContext.cs` | 変数ストア・制御フラグ・`%VAR%`展開 |
+| `MacroAbortException.cs` | マクロ強制停止用例外 |
 | `VersionInfo.cs` | バージョン番号・ビルド情報 |
 
 ### src/Commands/
 
 | ファイル名 | 説明 |
 |---|---|
-| `ICommand.cs` | コマンドインターフェース定義 |
-| `PrintCommand.cs` | `print` コマンドの実装（カラー出力対応） |
-| `SetVarCommand.cs` | `setvar` コマンドの実装 |
-| `VerCommand.cs` | `ver` コマンドの実装（バージョン表示） |
+| `ICommand.cs` | コマンドインターフェース |
+| `PrintCommand.cs` | `print` コマンド |
+| `SetVarCommand.cs` | `setvar` コマンド |
+| `SetPromptCommand.cs` | `setprompt` コマンド |
+| `PauseCommand.cs` | `pause` コマンド |
+| `VerCommand.cs` | `ver` コマンド |
+
+### src/Flow/
+
+| ファイル名 | 説明 |
+|---|---|
+| `IfCommand.cs` | `if` コマンド |
+| `ElseIfCommand.cs` | `elseif` コマンド |
+| `ElseCommand.cs` | `else` コマンド |
+| `EndIfCommand.cs` | `endif` コマンド |
+| `LoopCommand.cs` | `loop` コマンド |
+| `EndLoopCommand.cs` | `endloop` コマンド |
+| `BreakCommand.cs` | `break` コマンド |
+
+### src/IO/
+
+| ファイル名 | 説明 |
+|---|---|
+| `WaitCommand.cs` | `wait` コマンド |
+| `WaitToCommand.cs` | `waitto` コマンド |
+| `SendLnCommand.cs` | `sendln` コマンド |
+
+### src/Meta/
+
+| ファイル名 | 説明 |
+|---|---|
+| `TranscriptOpenCommand.cs` | `.logopen` メタコマンド |
+| `TranscriptCloseCommand.cs` | `.logclose` メタコマンド |
+
+### src/System/
+
+| ファイル名 | 説明 |
+|---|---|
+| `ExitCommand.cs` | `exit` コマンド |
+| `AdminCommand.cs` | `admin` コマンド |
 
 ### src/Parser/
 
 | ファイル名 | 説明 |
 |---|---|
-| （パーサー関連ファイル） | マクロファイルの読み込み・1行パース処理 |
+| `MacroLoader.cs` | マクロファイル読み込み・コメント除去 |
 
 ### src/Registry/
 
 | ファイル名 | 説明 |
 |---|---|
-| `CommandRegistry.cs` | コマンド名 → 実行ハンドラを登録する中心レジストリ |
-| `CommandRegistryBuilder.cs` | 全コマンドを CommandRegistry に登録する集約処理 |
+| `CommandRegistry.cs` | コマンド名→ハンドラ登録 |
+| `CommandRegistryBuilder.cs` | 全コマンド登録の集約 |
 
 ---
 
 ## マクロファイルの書式
 
-マクロファイルは **1行1コマンド**で構成されます。  
-`#` または `;` で始まる行はコメントとして無視されます。
+マクロファイルは **1行1コマンド**で構成されます。
+`#` `;` `//` で始まる行はコメントとして無視されます。
+インデントは自由です（空白・タブは自動除去）。
 
 ```
 ; これはコメント
@@ -87,50 +141,112 @@ print cyan 接続完了
 setvar USER admin
 sendln echo %USER%
 waitto 5 >
-print green 完了
+if lastwait == ok
+    print green 完了
+else
+    print red タイムアウト
+endif
 ```
 
 ---
 
-## 使用可能なコマンド一覧
+## コマンド一覧
+
+### 入出力
 
 | コマンド | 引数 | 説明 |
 |---|---|---|
-| `wait` | `<文字列>` | 指定文字列が出力に現れるまで無制限に待機 |
-| `waitto` | `<秒数> <文字列>` | 指定秒数以内に文字列が現れなければタイムアウト |
+| `wait` | `<文字列>` | 文字列が出るまで無制限に待機 |
+| `waitto` | `<秒数> <文字列>` | タイムアウト付き待機 |
 | `sendln` | `<文字列>` | PowerShell に1行送信 |
-| `rawtext` | `<文字列>` | 改行なしで PowerShell に生文字列を送信 |
-| `print` | `<色> <文字列>` | 指定色でコンソールにメッセージを出力 |
-| `setvar` | `<名前> <値>` | 変数を設定（`%名前%` で展開） |
-| `if` | `<左辺> <演算子> <右辺>` | 条件分岐の開始（`==`, `!=` に対応） |
+
+### 制御フロー
+
+| コマンド | 引数 | 説明 |
+|---|---|---|
+| `if` | `<左辺> <演算子> <右辺>` | 条件分岐（`==` `!=`） |
 | `elseif` | `<左辺> <演算子> <右辺>` | 追加条件分岐 |
 | `else` | なし | 条件不一致時の処理 |
 | `endif` | なし | 条件分岐の終了 |
-| `ver` | なし | バージョン情報を表示 |
+| `loop` | `<回数>` | 指定回数繰り返す |
+| `endloop` | なし | ループ末尾 |
+| `break` | なし | ループを抜ける |
 
-### print で使用できる色
+### PSCコマンド
 
-`red` / `green` / `yellow` / `blue` / `cyan` / `magenta` / `white` / `gray`
+| コマンド | 引数 | 説明 |
+|---|---|---|
+| `print` | `<色> <文字列>` | カラーメッセージ出力 |
+| `setvar` | `<名前> <値>` | 変数設定（`%名前%` で展開） |
+| `setprompt` | `<文字列>` | プロンプト検出文字を変更 |
+| `pause` | `<秒数>` | 指定秒数待機 |
+| `ver` | なし | バージョン情報表示 |
 
-### if コマンドの特殊変数
+### システム
+
+| コマンド | 引数 | 説明 |
+|---|---|---|
+| `exit` | なし | PSC を終了 |
+| `admin` | なし | 管理者権限で再起動 |
+
+### メタコマンド
+
+| コマンド | 引数 | 説明 |
+|---|---|---|
+| `.logopen` | `<ファイルパス>` | トランスクリプト開始 |
+| `.logclose` | なし | トランスクリプト停止 |
+
+### 未登録コマンド
+
+登録されていないコマンドはそのまま PowerShell に送信されます。
+ps1 スクリプトの直接呼び出しに活用できます。
+
+```
+wait >
+.\ps1\setup.ps1
+wait >
+```
+
+**注意：** 事前に `wait` が必要です。未確認の場合はエラー停止します。
+
+---
+
+## print で使用できる色
+
+`red` / `green` / `yellow` / `blue` / `cyan` / `magenta` / `white`
+
+---
+
+## 特殊変数
 
 | 変数名 | 説明 |
 |---|---|
-| `lastwait` | 直前の `waitto` の結果（`ok` または `ng`）|
+| `lastwait` | 直前の `waitto` の結果（`ok` / `ng`）|
 
-使用例：
+---
+
+## setprompt の使い方（SSH対応）
+
+SSH接続後はプロンプトが `$` や `#` に変わります。
+
 ```
-waitto 5 >
-if lastwait == ng
-    print red タイムアウトしました
-endif
+wait >
+sendln ssh user@192.168.1.1
+setprompt $
+wait $
+sendln ls -la
+wait $
+sendln exit
+setprompt >
+wait >
+print green SSH完了
 ```
 
 ---
 
 ## ビルド方法
 
-```bat
+```
 Build.bat
 ```
 
@@ -150,4 +266,4 @@ Build.bat
 
 | バージョン | 内容 |
 |---|---|
-| 1.0.0 | 初版リリース。基本コマンド・WAIT制御・プロンプト制御バグ修正 |
+| 1.0.0 | 初版リリース。全コマンド実装・Fail Fast設計・構成整理 |
