@@ -81,6 +81,12 @@ namespace PowerShellController
 		
 		// GOTO 制御
 		public string GotoLabel { get; set; }
+		
+		// CALL / RETURN 制御
+		public string CallLabel { get; set; }
+		public int CallReturnIndex { get; set; }
+		public bool IsInCall { get; set; }
+		public bool ReturnRequested { get; set; }		
         
     }
 }

@@ -12,6 +12,10 @@ namespace PowerShellController
             {
                 for (int i = 0; i < lines.Count; i++)
                 {
+                    // call 中でない場合、ラベル行に到達したらそこで終了
+                    if (!ctx.IsInCall && lines[i].Trim().StartsWith(":"))
+                        break;
+
                     // loop コマンドでループ先頭インデックスを記録
                     string trimmed = lines[i].Trim();
                     if (trimmed.StartsWith("loop", StringComparison.OrdinalIgnoreCase) &&
@@ -26,7 +30,8 @@ namespace PowerShellController
                     if (ctx.BreakRequested)
                     {
                         while (i < lines.Count &&
-                            !lines[i].Trim().StartsWith("endloop", StringComparison.OrdinalIgnoreCase))
+                            !lines[i].Trim().StartsWith("endloop",
+                                StringComparison.OrdinalIgnoreCase))
                         {
                             i++;
                         }
@@ -59,19 +64,60 @@ namespace PowerShellController
                         }
 
                         if (!found)
-                        {
                             throw new MacroAbortException(
                                 "[ERROR] goto: ラベル '" + label + "' が見つかりません。");
+                    }
+
+                    // call ジャンプ処理
+                    if (ctx.CallLabel != null)
+                    {
+                        string label = ":" + ctx.CallLabel;
+                        ctx.CallLabel = null;
+
+                        bool found = false;
+                        for (int j = 0; j < lines.Count; j++)
+                        {
+                            if (string.Equals(lines[j].Trim(), label,
+                                StringComparison.OrdinalIgnoreCase))
+                            {
+                                ctx.CallReturnIndex = i + 1;
+                                ctx.IsInCall = true;
+                                i = j;
+                                found = true;
+                                break;
+                            }
                         }
+
+                        if (!found)
+                            throw new MacroAbortException(
+                                "[ERROR] call: ラベル '" + label + "' が見つかりません。");
+                    }
+
+                    // return 処理
+                    if (ctx.ReturnRequested)
+                    {
+                        ctx.ReturnRequested = false;
+                        ctx.IsInCall = false;
+                        i = ctx.CallReturnIndex - 1;
+                        continue;
+                    }
+
+                    // ファイル末尾で call 中だった場合は自動 return
+                    if (ctx.IsInCall && i == lines.Count - 1)
+                    {
+                        ctx.IsInCall = false;
+                        i = ctx.CallReturnIndex - 1;
                     }
                 }
             }
-            catch (MacroAbortException ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
-            }
+			catch (MacroAbortException ex)
+			{
+			    if (PowerShellHost.PromptWritten)
+			        Console.WriteLine();
+			    Console.ForegroundColor = ConsoleColor.Red;
+			    Console.WriteLine(ex.Message);
+			    Console.ResetColor();
+			}
 
             // プロンプトが来るまで最大1秒待つ
             int waited = 0;
