@@ -25,6 +25,12 @@ namespace PowerShellController
         public static bool CaptureMode = false;
         public static string CapturedLine = "";
 
+        // エコーバック制御（デフォルトは on）
+        public static bool EchoBack = true;
+
+        // sendln が送信した最後のコマンド（エコーバック抑制用）
+        public static string LastSentCommand = null;
+
         // WAIT
         public static void BeginWait(string pattern)
         {

@@ -1,5 +1,3 @@
-using System;
-
 namespace PowerShellController
 {
     public class SendLnCommand : ICommand
@@ -20,6 +18,13 @@ namespace PowerShellController
                     "[ERROR] sendln: プロンプト未確認です。事前に wait > を実行してください。");
 
             string expanded = ctx.Expand(arg);
+
+			// echo off 時はエコーバック抑制用に記録
+			if (!PowerShellHost.EchoBack)
+			    PowerShellHost.LastSentCommand = expanded;
+			else
+			    PowerShellHost.LastSentCommand = null;  // ★ 追加
+
             PowerShellHost.PromptWritten = false;
             PowerShellHost.SendToPowerShell(expanded);
         }
