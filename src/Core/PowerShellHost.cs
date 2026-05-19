@@ -13,21 +13,23 @@ namespace PowerShellController
         internal static string WaitPattern = null;
         internal static bool WaitActive = false;
 
-
         public static Action<string> SendToPowerShell { get; set; }
-
-		// プロンプトパターン（デフォルトは >）
-		public static string PromptPattern = ">";
 
         // プロンプトが出力済みかどうか
         public static bool PromptWritten = false;
+
+        // プロンプトパターン（デフォルトは >）
+        public static string PromptPattern = ">";
+
+        // キャプチャモード
+        public static bool CaptureMode = false;
+        public static string CapturedLine = "";
 
         // WAIT
         public static void BeginWait(string pattern)
         {
             if (pattern == null)
                 throw new ArgumentNullException("pattern");
-
             lock (WaitLock)
             {
                 WaitPattern = pattern.ToLower();
@@ -49,7 +51,7 @@ namespace PowerShellController
             return signaled;
         }
 
-        // ★ 色付き出力（新規追加）
+        // 色付き出力
         public static void WriteLineColored(string text, ConsoleColor color)
         {
             var old = Console.ForegroundColor;

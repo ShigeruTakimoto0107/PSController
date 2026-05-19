@@ -66,8 +66,17 @@ namespace PowerShellController
                     // プロンプト検出
                     if (buffer.EndsWith(PowerShellHost.PromptPattern + " "))
                     {
-                        Console.Write(buffer);
-                        PowerShellHost.PromptWritten = true;
+                        if (!PowerShellHost.CaptureMode)
+                        {
+                            Console.Write(buffer);
+                            PowerShellHost.PromptWritten = true;
+                        }
+                        else
+                        {
+                            // キャプチャモード終了
+                            PowerShellHost.CaptureMode = false;
+                            PowerShellHost.PromptWritten = true;
+                        }
                         buffer = "";
                         continue;
                     }
@@ -76,6 +85,23 @@ namespace PowerShellController
                     if (c == '\n')
                     {
                         string line = buffer.TrimEnd('\r', '\n');
+
+                        // キャプチャモード中は画面に出さずバッファに溜める
+                        if (PowerShellHost.CaptureMode)
+                        {
+                            // エコーバック行はスキップ
+                            if (lastUserInput != null &&
+                                string.Equals(line, lastUserInput, StringComparison.Ordinal))
+                            {
+                                buffer = "";
+                                continue;
+                            }
+                            // 最終行を更新
+                            if (!string.IsNullOrWhiteSpace(line))
+                                PowerShellHost.CapturedLine = line;
+                            buffer = "";
+                            continue;
+                        }
 
                         // ユーザー入力のエコーバック抑制
                         if (lastUserInput != null &&
