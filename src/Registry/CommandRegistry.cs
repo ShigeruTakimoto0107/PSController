@@ -17,21 +17,24 @@ namespace PowerShellController
 		{
 		    if (string.IsNullOrWhiteSpace(line))
 		        return;
-		        
-            line = line.Trim();  // ← 追加
-            
-		    // SkipMode 中は endif だけ通す
+
+		    line = line.Trim();
+
+		    // ラベル行は何もしない
+		    if (line.StartsWith(":"))
+		        return;
+
+		    // SkipMode 中は else/elseif/endif だけ通す
 		    if (ctx.SkipMode)
-			{
-			    if (!line.StartsWith("endif", StringComparison.OrdinalIgnoreCase) &&
-			        !line.StartsWith("else", StringComparison.OrdinalIgnoreCase) &&
-			        !line.StartsWith("elseif", StringComparison.OrdinalIgnoreCase))
-			        return;
-			}
+		    {
+		        if (!line.StartsWith("endif", StringComparison.OrdinalIgnoreCase) &&
+		            !line.StartsWith("else", StringComparison.OrdinalIgnoreCase) &&
+		            !line.StartsWith("elseif", StringComparison.OrdinalIgnoreCase))
+		            return;
+		    }
 
 		    string cmd = line;
 		    string arg = "";
-
 		    int p = line.IndexOf(' ');
 		    if (p >= 0)
 		    {
@@ -40,21 +43,19 @@ namespace PowerShellController
 		    }
 
 		    Action<string, ExecutionContext> h;
-			if (handlers.TryGetValue(cmd, out h))
-			{
-			    h(arg, ctx);
-			}
-			else
-			{
-			    // Unknown: 未登録コマンドはそのまま PowerShell に送信
-			    if (!PowerShellHost.PromptWritten)
-			    {
-			        throw new MacroAbortException(
-			            "[ERROR] 未登録コマンド '" + cmd + "': プロンプト未確認です。事前に wait > を実行してください。");
-			    }
-			    PowerShellHost.PromptWritten = false;
-			    PowerShellHost.SendToPowerShell(line);
-			}
+		    if (handlers.TryGetValue(cmd, out h))
+		    {
+		        h(arg, ctx);
+		    }
+		    else
+		    {
+		        // Unknown: 未登録コマンドはそのまま PowerShell に送信
+		        if (!PowerShellHost.PromptWritten)
+		            throw new MacroAbortException(
+		                "[ERROR] 未登録コマンド '" + cmd + "': プロンプト未確認です。事前に wait > を実行してください。");
+		        PowerShellHost.PromptWritten = false;
+		        PowerShellHost.SendToPowerShell(line);
+		    }
 		}
 
     }

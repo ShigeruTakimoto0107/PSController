@@ -78,6 +78,9 @@ namespace PowerShellController
         
         // マクロファイルパス（admin コマンドで使用）
 		public string MacroFilePath { get; set; }
+		
+		// GOTO 制御
+		public string GotoLabel { get; set; }
         
     }
 }

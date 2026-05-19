@@ -23,6 +23,7 @@ namespace PowerShellController
             new BreakCommand().Register(registry);
             new TranscriptOpenCommand().Register(registry);
             new TranscriptCloseCommand().Register(registry);
+            new GotoCommand().Register(registry);
         }
     }
 }

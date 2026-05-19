@@ -39,6 +39,31 @@ namespace PowerShellController
                         i = ctx.LoopStartIndex - 1;
                         ctx.LoopBackRequested = false;
                     }
+
+                    // goto ジャンプ処理
+                    if (ctx.GotoLabel != null)
+                    {
+                        string label = ":" + ctx.GotoLabel;
+                        ctx.GotoLabel = null;
+
+                        bool found = false;
+                        for (int j = 0; j < lines.Count; j++)
+                        {
+                            if (string.Equals(lines[j].Trim(), label,
+                                StringComparison.OrdinalIgnoreCase))
+                            {
+                                i = j;
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            throw new MacroAbortException(
+                                "[ERROR] goto: ラベル '" + label + "' が見つかりません。");
+                        }
+                    }
                 }
             }
             catch (MacroAbortException ex)
