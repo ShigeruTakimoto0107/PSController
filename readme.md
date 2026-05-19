@@ -242,7 +242,6 @@ wait >
 
 ## setprompt の使い方（SSH対応）
 
-SSH接続後はプロンプトが `$` や `#` に変わります。
 wait >
 sendln ssh user@192.168.1.1
 setprompt $
