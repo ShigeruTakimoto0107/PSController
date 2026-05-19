@@ -242,7 +242,7 @@ wait >
 ---
 
 ## setprompt の使い方（SSH対応）
-
+```
 wait >
 sendln ssh user@192.168.1.1
 setprompt $
@@ -253,12 +253,13 @@ sendln exit
 setprompt >
 wait >
 print green SSH完了
-
+```
 ---
 
 ## goto / call / return の使い方
 
 ### goto（ジャンプ）
+```
 wait >
 setvar FLAG ng
 if %FLAG% == ok
@@ -272,20 +273,22 @@ goto END
 print red エラー
 :END
 print cyan 終了
-
+```
 ### call / return（サブルーチン）
+```
 wait >
 call GREET
 print cyan メイン処理続行
 :GREET
 print green こんにちは
 return
-
+```
 **注意：** ネストした `call` はサポートされていません。
 
 ---
 
 ## include の使い方
+```
 ; main.psm
 wait >
 include common.psm
@@ -294,13 +297,14 @@ print green メイン処理
 ; common.psm
 setvar APP_NAME PSController
 print cyan %APP_NAME% 起動
-
+```
 - 相対パスは親ファイルのディレクトリ基準
 - 循環参照は自動検出して警告
 
 ---
 
 ## echo on/off の使い方
+```
 wait >
 echo off
 sendln echo hello
@@ -308,18 +312,19 @@ wait >
 echo on
 sendln echo world
 wait >
-
+```
 `echo off` 時はエコーバックが抑制されクリーンな出力になります。
 プロンプトは常に表示されます。
 
 ---
 
 ## getvar の使い方
+```
 wait >
 sendln $env:USERNAME
 getvar USERNAME
 print green ユーザー名: %USERNAME%
-
+```
 直前のコマンド出力の最終行を変数に取り込みます。
 出力は画面に表示されません。
 
