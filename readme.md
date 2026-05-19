@@ -35,6 +35,7 @@ PowerShell の標準出力をリアルタイムで監視し、
 ---
 
 ## ディレクトリ構成
+```
 PSController/
 ├── bin/       # ビルド成果物
 ├── ico/       # アイコン
@@ -52,7 +53,7 @@ PSController/
 │   └── System/
 ├── Build.bat
 └── readme.md
-
+```
 ---
 
 ## ソースファイル一覧
