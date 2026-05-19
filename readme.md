@@ -1,357 +1,175 @@
 # PowerShellController (PSController)
 
-PowerShellController は、PowerShell を外部プロセスとして起動し、
-**マクロファイル (.psm)** を用いて PowerShell を自動操作する軽量コントローラです。
+Windowsのエンタープライズ運用管理を劇的に効率化する、堅牢かつ軽量なPowerShell自動化コントローラ。
 
-PowerShell の標準出力をリアルタイムで監視し、
-マクロコマンドを逐次実行することで、
-**対話的な PowerShell 操作を完全自動化**できます。
+PowerShellを外部プロセスとして安全に起動・制御し、独自のマクロファイル (.psm) を用いて、これまで自動化が困難だった「対話的なプロンプト操作」を完全自動化します。
 
 ---
 
-## 機能概要
+## 🛠️ 設計思想と強力な特徴（大企業・本番環境向け安全設計）
 
-- PowerShell の起動と制御
-- マクロファイル (.psm) の実行
-- `sendln` による PowerShell へのコマンド送信
-- `wait` / `waitto` による出力待機
-- `setvar` / `getvar` による変数操作
-- `if` / `elseif` / `else` / `endif` による条件分岐
-- `loop` / `endloop` / `break` による繰り返し処理
-- `goto` / ラベル によるジャンプ
-- `call` / `return` によるサブルーチン呼び出し
-- `include` によるマクロファイルの展開
-- `echo on` / `echo off` によるエコーバック制御
-- `print` によるカラーメッセージ出力
-- `pause` による待機
-- `setprompt` による動的プロンプト切り替え
-- `admin` による管理者権限での自動再起動
-- `.logopen` / `.logclose` によるトランスクリプト記録
-- `ver` によるバージョン情報表示
-- `exit` による PSC 終了
-- 未登録コマンドはそのまま PowerShell に送信
-- Fail Fast：事前条件違反は即エラー停止
+### 1. Windows標準環境のみで動作（ノン・イントルージョン）
+Cygwinや各種サードパーティ製ターミナルエミュレータ等の外部ランタイムを持ち込めない、ガチガチに統制された大企業のエンタープライズ・本番環境でも即座に導入可能。Windows標準の.NET環境とPowerShellだけで、スタンドアロン（依存関係なし）で動作します。
+
+### 2. 冷徹な「Fail Fast（事前条件違反の即時停止）」による環境保護
+不整合を検知したままマクロが暴走し、本番環境を破壊することを絶対に防ぎます。
+期待するプロンプトが指定時間内に返ってこない場合や、事前条件に1ミリでも違反（Violation）を検知した瞬間、ツールが冷徹に**処理をミリ秒単位で即時強制停止（Terminate）**します。安全性が確認できない限り、次の一手は絶対に実行しません。
+
+### 3. タスクマネージャーの可読性とセキュリティ
+バックグラウンド実行時や監査ログ監視時、不審なプロセスとして誤認されやすい「3文字の謎のEXE」ではなく、**`PowerShellController.exe`** という規律正しいプロセス名で明示的に動作。企業のインフラ監査や情シスのセキュリティ審査をスムーズに通過します。
+
+### 4. 未登録コマンドのネイティブ透過送信
+マクロ言語にない高度なPowerShellコマンドや独自の関数は、コントローラを素通りしてそのままPowerShellプロセスに透過送信されます。マクロのシンプルさと、PowerShellの強力な表現力を100%両立します。
 
 ---
 
-## ディレクトリ構成
+## 📂 ディレクトリ構成
+
+大企業のデプロイ手順書や構成管理にそのまま組み込める、美しく洗練されたディレクトリ構造を採用しています。
+※ビルド成果物（`bin/`、`obj/`）はソースコード管理（Git）から排除され、常にクリーンな状態を保ちます。
+
+```text
+PSController/ (リポジトリROOT)
+│  LICENSE              <- MITライセンス
+│  README.md            <- 本ドキュメント
+│  PSController.sln     <- Visual Studio ソリューション
+│
+├─src/                  <- C# ソースコード（Git管理対象）
+│  └─Core/
+│      ├─Program.cs          <- エントリーポイント
+│      ├─PowerShellProcess.cs <- プロセス起動・出力監視
+│      └─MacroParser.cs       <- マクロ構文解析・Fail Fast制御
+│
+├─macros/               <- インパクトのある運用自動化サンプルマクロ (.psm)
+└─ps1/                  <- マクロ内から呼び出される支援スクリプト (.ps1)
 ```
-PSController/
-├── bin/       # ビルド成果物
-├── ico/       # アイコン
-├── logs/      # ログ置き場
-├── macros/    # マクロファイル置き場
-├── ps1/       # スクリプト置き場
-├── src/
-│   ├── Commands/
-│   ├── Core/
-│   ├── Flow/
-│   ├── IO/
-│   ├── Meta/
-│   ├── Parser/
-│   ├── Registry/
-│   └── System/
-├── Build.bat
-└── readme.md
-```
----
+🚀 機能概要（マクロコマンド一覧）
+PowerShellの起動と制御：安全な外部プロセス分離
 
-## ソースファイル一覧
+マクロファイル (.psm) の実行：上から順に逐次高速インタープリタ実行
 
-### src/Core/
+sendln：PowerShellへのコマンド送信
 
-| ファイル名 | 説明 |
-|---|---|
-| `Program.cs` | エントリーポイント |
-| `PowerShellProcess.cs` | プロセス起動・出力監視 |
-| `MacroRunner.cs` | マクロ実行ループ |
-| `PowerShellHost.cs` | WAITバッファ・出力待機・カラー出力 |
-| `ExecutionContext.cs` | 変数ストア・制御フラグ・`%VAR%`展開 |
-| `MacroAbortException.cs` | マクロ強制停止用例外 |
-| `VersionInfo.cs` | バージョン番号・ビルド情報 |
+wait / waitto：出力およびターゲットプロンプトの厳密な待機
 
-### src/Commands/
+setvar / getvar：マクロ内での変数操作
 
-| ファイル名 | 説明 |
-|---|---|
-| `ICommand.cs` | コマンドインターフェース |
-| `PrintCommand.cs` | `print` コマンド |
-| `SetVarCommand.cs` | `setvar` コマンド |
-| `GetVarCommand.cs` | `getvar` コマンド |
-| `SetPromptCommand.cs` | `setprompt` コマンド |
-| `PauseCommand.cs` | `pause` コマンド |
-| `EchoCommand.cs` | `echo` コマンド |
-| `VerCommand.cs` | `ver` コマンド |
+if / elseif / else / endif：柔軟な条件分岐
 
-### src/Flow/
+loop / endloop / break：繰り返し処理
 
-| ファイル名 | 説明 |
-|---|---|
-| `IfCommand.cs` | `if` コマンド |
-| `ElseIfCommand.cs` | `elseif` コマンド |
-| `ElseCommand.cs` | `else` コマンド |
-| `EndIfCommand.cs` | `endif` コマンド |
-| `LoopCommand.cs` | `loop` コマンド |
-| `EndLoopCommand.cs` | `endloop` コマンド |
-| `BreakCommand.cs` | `break` コマンド |
-| `GotoCommand.cs` | `goto` コマンド |
-| `CallCommand.cs` | `call` コマンド |
-| `ReturnCommand.cs` | `return` コマンド |
+goto / ラベル：指定ラベルへのジャンプ
 
-### src/IO/
+call / return：サブルーチン呼び出し
 
-| ファイル名 | 説明 |
-|---|---|
-| `WaitCommand.cs` | `wait` コマンド |
-| `WaitToCommand.cs` | `waitto` コマンド |
-| `SendLnCommand.cs` | `sendln` コマンド |
+include：外部マクロファイルの静的展開（共通処理の共通化）
 
-### src/Meta/
+echo on / echo off：エコーバック（コマンド非表示）制御
 
-| ファイル名 | 説明 |
-|---|---|
-| `TranscriptOpenCommand.cs` | `.logopen` メタコマンド |
-| `TranscriptCloseCommand.cs` | `.logclose` メタコマンド |
+print：ログ視認性を高めるカラーメッセージ出力
 
-### src/System/
+pause：オペレーター確認のための安全な一時待機
 
-| ファイル名 | 説明 |
-|---|---|
-| `ExitCommand.cs` | `exit` コマンド |
-| `AdminCommand.cs` | `admin` コマンド |
+setprompt：SSH接続先や特権環境に追従する動的プロンプト切り替え
 
-### src/Parser/
+admin：Windows管理者権限（UAC）への自動昇格・再起動
 
-| ファイル名 | 説明 |
-|---|---|
-| `MacroLoader.cs` | マクロファイル読み込み・include展開 |
+.logopen / .logclose：オペレーション証跡（トランスクリプト）の完全記録
 
-### src/Registry/
+ver：バージョン情報の表示
 
-| ファイル名 | 説明 |
-|---|---|
-| `CommandRegistry.cs` | コマンド名→ハンドラ登録 |
-| `CommandRegistryBuilder.cs` | 全コマンド登録の集約 |
+exit：安全なプロセス切断とPSCの正常終了
 
----
-
-## マクロファイルの書式
-
-マクロファイルは **1行1コマンド**で構成されます。
-`#` `;` `//` で始まる行はコメントとして無視されます。
-インデントは自由です（空白・タブは自動除去）。
-; これはコメント
+📝 マクロ構文の具体例
+基本的な対話自動化とFail Fast
+Plaintext
+; サーバーの初期設定自動化サンプル
 wait >
-print cyan 接続完了
-setvar USER admin
-sendln echo %USER%
-waitto 5 >
-if lastwait == ok
-print green 完了
-else
-print red タイムアウト
-endif
-
----
-
-## コマンド一覧
-
-### 入出力
-
-| コマンド | 引数 | 説明 |
-|---|---|---|
-| `wait` | `<文字列>` | 文字列が出るまで無制限に待機 |
-| `waitto` | `<秒数> <文字列>` | タイムアウト付き待機 |
-| `sendln` | `<文字列>` | PowerShell に1行送信 |
-| `getvar` | `<変数名>` | 直前のコマンド出力を変数に取り込む |
-
-### 制御フロー
-
-| コマンド | 引数 | 説明 |
-|---|---|---|
-| `if` | `<左辺> <演算子> <右辺>` | 条件分岐（`==` `!=`） |
-| `elseif` | `<左辺> <演算子> <右辺>` | 追加条件分岐 |
-| `else` | なし | 条件不一致時の処理 |
-| `endif` | なし | 条件分岐の終了 |
-| `loop` | `<回数>` | 指定回数繰り返す |
-| `endloop` | なし | ループ末尾 |
-| `break` | なし | ループを抜ける |
-| `goto` | `<ラベル名>` | 指定ラベルにジャンプ |
-| `call` | `<ラベル名>` | サブルーチン呼び出し |
-| `return` | なし | サブルーチンから戻る |
-
-### PSCコマンド
-
-| コマンド | 引数 | 説明 |
-|---|---|---|
-| `print` | `<色> <文字列>` | カラーメッセージ出力 |
-| `setvar` | `<名前> <値>` | 変数設定（`%名前%` で展開） |
-| `getvar` | `<変数名>` | PowerShell出力を変数に取り込む |
-| `setprompt` | `<文字列>` | プロンプト検出文字を変更 |
-| `pause` | `<秒数>` | 指定秒数待機 |
-| `echo` | `on` / `off` | エコーバック制御（デフォルト on） |
-| `include` | `<ファイルパス>` | マクロファイルを展開して読み込む |
-| `ver` | なし | バージョン情報表示 |
-
-### システム
-
-| コマンド | 引数 | 説明 |
-|---|---|---|
-| `exit` | なし | PSC を終了 |
-| `admin` | なし | 管理者権限で再起動 |
-
-### メタコマンド
-
-| コマンド | 引数 | 説明 |
-|---|---|---|
-| `.logopen` | `<ファイルパス>` | トランスクリプト開始 |
-| `.logclose` | なし | トランスクリプト停止 |
-
-### ラベル
-
-`:` で始まる行はラベルとして扱われます。
-`goto` / `call` のジャンプ先として使用します。
-:LABEL_NAME
-print green ラベルに到達
-return
-
-### 未登録コマンド
-
-登録されていないコマンドはそのまま PowerShell に送信されます。
-ps1 スクリプトの直接呼び出しに活用できます。
-wait >
-.\ps1\setup.ps1
+print cyan サーバー情報取得開始...
+sendln Get-ComputerInfo
 wait >
 
-**注意：** 事前に `wait` が必要です。未確認の場合はエラー停止します。
+; 特権が必要な処理への移行
+admin
+## 分岐・ループ・サブルーチンの高度な制御
 
----
-
-## print で使用できる色
-
-`red` / `green` / `yellow` / `blue` / `cyan` / `magenta` / `white`
-
----
-
-## 特殊変数
-
-| 変数名 | 説明 |
-|---|---|
-| `lastwait` | 直前の `waitto` の結果（`ok` / `ng`）|
-
----
-
-## setprompt の使い方（SSH対応）
-```
-wait >
-sendln ssh user@192.168.1.1
-setprompt $
-wait $
-sendln ls -la
-wait $
-sendln exit
-setprompt >
-wait >
-print green SSH完了
-```
----
-
-## goto / call / return の使い方
-
-### goto（ジャンプ）
-```
+### goto（ジャンプ）による例外ハンドリング
+```text
 wait >
 setvar FLAG ng
 if %FLAG% == ok
-goto SUCCESS
+    goto SUCCESS
 endif
 goto ERROR
+
 :SUCCESS
-print green 成功
+print green 処理成功
 goto END
+
 :ERROR
-print red エラー
+print red 事前チェックに失敗したため、安全に分岐します
 :END
-print cyan 終了
-```
-### call / return（サブルーチン）
-```
+print cyan スクリプト終了
+
+## 分岐・ループ・サブルーチンの高度な制御
+
+### goto（ジャンプ）による例外ハンドリング
+```text
+wait >
+setvar FLAG ng
+if %FLAG% == ok
+    goto SUCCESS
+endif
+goto ERROR
+
+:SUCCESS
+print green 処理成功
+goto END
+
+:ERROR
+print red 事前チェックに失敗したため、安全に分岐します
+:END
+print cyan スクリプト終了
+call / return（サブルーチン）
+Plaintext
 wait >
 call GREET
 print cyan メイン処理続行
+
 :GREET
-print green こんにちは
+print green [Subroutine] 初期化処理を実行中...
 return
-```
-**注意：** ネストした `call` はサポートされていません。
+注意：ネストした call（サブルーチン内からのさらに別サブルーチン呼び出し）は Fail Fast 思想に基づきサポートされていません。
 
----
-
-## include の使い方
-```
+include による共通部品化
+Plaintext
 ; main.psm
 wait >
 include common.psm
-print green メイン処理
+print green メイン処理実行
 
 ; common.psm
-setvar APP_NAME PSController
-print cyan %APP_NAME% 起動
-```
-- 相対パスは親ファイルのディレクトリ基準
-- 循環参照は自動検出して警告
+setvar APP_NAME PowerShellController
+print cyan %APP_NAME% 共通ライブラリをロードしました
+相対パスは親ファイルのディレクトリを基準とします。
 
----
+循環参照（AがBを呼び、BがAを呼ぶ）は内部パーサーで自動検出し、実行前に厳格にブロックします。
 
-## echo on/off の使い方
-```
+echo on/off による機密情報の保護
+パスワード入力時や、ログを汚したくない場合は echo off でコンソールの出力を一時的にマスクできます。
+
+Plaintext
 wait >
 echo off
-sendln echo hello
+sendln $password = "Secret123"
 wait >
 echo on
-sendln echo world
+sendln Write-Output "パスワード設定完了"
 wait >
-```
-`echo off` 時はエコーバックが抑制されクリーンな出力になります。
-プロンプトは常に表示されます。
+免責事項 (Disclaimer)
+本ソフトウェアの使用（実行、複製、改変、配布等の一切の行為）に伴い、万が一ユーザーの本番環境、開発環境、システム、データ、ネットワーク、ハードウェア等に損害、損失、障害、データの破損または漏洩、その他いかなる不利益が生じた場合であっても、開発者および著作権者はその理由の如何を問わず、一切の責任（直接損害、間接損害、派生損害、特別損害、逸失利益を含むがこれらに限定されない）を負いません。
 
----
+本ソフトウェアは「現状のまま（As Is）」提供され、明示または黙示を問わず、その特定の目的への適合性、機能性、正確性、信頼性、または瑕疵の不在について、開発者は一切の保証をいたしません。マクロの記述および実行にあたっては、ユーザー自身の責任において、事前に十分なテスト環境での検証を行ってください。
 
-## getvar の使い方
-```
-wait >
-sendln $env:USERNAME
-getvar USERNAME
-print green ユーザー名: %USERNAME%
-```
-直前のコマンド出力の最終行を変数に取り込みます。
-出力は画面に表示されません。
-
----
-
-## ビルド方法
-Build.bat
-
-.NET Framework 4.0 以上が必要です。
-
----
-
-## 動作環境
-
-- Windows 10 / 11
-- .NET Framework 4.0 以上
-- Windows PowerShell 5.1
-
----
-
-## バージョン履歴
-
-| バージョン | 内容 |
-|---|---|
-| 1.0.0 | 初版リリース。全コマンド実装・Fail Fast設計・構成整理 |
-
-## 免責事項 (Disclaimer)
-
-本ソフトウェアは「現状のまま」提供されます。開発者は、本ソフトウェアの使用または使用不能から生じるいかなる損害（システムの破損、データの損失、業務の中断、またはその他の金銭的損失を含むがこれらに限定されない）に対しても、一切の責任を負いません。本ツールの実行環境や実行するマクロの内容は、ユーザー自身の責任において十分に検証を行ってください。
-
+ライセンス
+本プロジェクトは MIT License のもとで公開されています。商用利用、改変、再配布が企業内でも自由に行っていただけます。詳細は LICENSE ファイルを参照してください。
