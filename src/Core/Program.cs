@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace PowerShellController
@@ -11,7 +12,31 @@ namespace PowerShellController
             // マクロファイル読み込み
             List<MacroLine> lines = null;
             if (args.Length >= 1)
-                lines = MacroLoader.Load(args[0]);
+            {
+                string filePath = args[0];
+
+                // 1. 拡張子チェック（.pcm および .psm 以外は即エラー終了）
+                string extension = Path.GetExtension(filePath);
+                if (!string.Equals(extension, ".pcm", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(extension, ".psm", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("[ERROR] マクロ拡張子は .pcm を指定してください (不正な拡張子: " + extension + ")");
+                    Console.ResetColor();
+                    return 1;
+                }
+
+                // 2. ファイル存在チェック（見つからなければ即エラー終了）
+                if (!File.Exists(filePath))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("[ERROR] マクロファイルが見つかりません。拡張子が .pcm であるか確認してください: " + filePath);
+                    Console.ResetColor();
+                    return 1;
+                }
+
+                lines = MacroLoader.Load(filePath);
+            }
 
             // PowerShell プロセス起動・出力監視開始
             PowerShellProcess.Start();
