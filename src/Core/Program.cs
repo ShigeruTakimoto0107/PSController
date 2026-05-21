@@ -15,13 +15,12 @@ namespace PowerShellController
             {
                 string filePath = args[0];
 
-                // 1. 拡張子チェック（.pcm および .psm 以外は即エラー終了）
+                // 1. 拡張子チェック（.pscm 以外は即エラー終了）
                 string extension = Path.GetExtension(filePath);
-                if (!string.Equals(extension, ".pcm", StringComparison.OrdinalIgnoreCase) &&
-                    !string.Equals(extension, ".psm", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(extension, ".pscm", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("[ERROR] マクロ拡張子は .pcm を指定してください (不正な拡張子: " + extension + ")");
+                    Console.WriteLine("[ERROR] マクロ拡張子は .pscm を指定してください (不正な拡張子: " + extension + ")");
                     Console.ResetColor();
                     return 1;
                 }
@@ -30,7 +29,7 @@ namespace PowerShellController
                 if (!File.Exists(filePath))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("[ERROR] マクロファイルが見つかりません。拡張子が .pcm であるか確認してください: " + filePath);
+                    Console.WriteLine("[ERROR] マクロファイルが見つかりません。拡張子が .pscm であるか確認してください: " + filePath);
                     Console.ResetColor();
                     return 1;
                 }
