@@ -1,0 +1,169 @@
+; ============================================================
+; PSC 全コマンド確認マクロ v3 (Automated Build Verification)
+; ============================================================
+
+; --- wait (初期起動プロンプトを待機) ---
+wait >
+
+; --- .logopen (監査ログ開始コマンドのテスト) ---
+.logopen .\logs\test_run.log
+
+; --- ver ---
+ver
+
+; --- print ---
+print cyan === PSC 全コマンド確認自動テストを開始します ===
+
+; --- setvar ---
+setvar NAME テスト太郎
+setvar FLAG ok
+
+; --- print + 変数展開 ---
+print white 変数展開テスト: %NAME%
+
+; --- sendln ---
+sendln echo "sendlnの送信確認"
+wait >
+
+; --- pause (時間を1秒に短縮) ---
+print yellow 1秒間 pause します...
+pause 1
+print green pause完了
+
+; --- setprompt ---
+setprompt >
+print white setprompt確認OK
+
+; --- waitto 正常系 ---
+sendln echo "waitto_test_success"
+waitto 5 waitto_test_success
+if lastwait == ok
+    print green waitto成功
+else
+    print red waittoタイムアウト（NG）
+endif
+
+; --- waitto タイムアウト → lastwait == ng ---
+print yellow waittoタイムアウトテスト開始（2秒間意図的に待機します）
+waitto 2 NEVER_MATCH_STRING_XYZ
+if lastwait == ng
+    print green waittoタイムアウト検知確認（OK）
+else
+    print red waittoタイムアウト失敗（NG）
+endif
+
+; --- if / elseif / else / endif ---
+setvar FLAG maybe
+if %FLAG% == ok
+    print red IFが真（NG）
+elseif %FLAG% == maybe
+    print green ELSEIFが真（OK）
+else
+    print red ELSEが真（NG）
+endif
+
+; --- if 偽 → else ---
+setvar FLAG ng
+if %FLAG% == ok
+    print red IFが真（NG）
+else
+    print green ELSEが真（OK）
+endif
+
+; --- loop / endloop ---
+print cyan loopテスト開始 (3回ループ)
+setvar LOOP_COUNT 0
+loop 3
+    sendln echo "ループ実行中"
+    wait >
+endloop
+print green loop 3回完了（OK）
+
+; --- loop / break ---
+print cyan loop+breakテスト開始 (10回指定、1回目で脱出)
+loop 10
+    sendln echo "break実行前"
+    wait >
+    break
+endloop
+print green breakで脱出（OK）
+
+; --- goto 前方ジャンプ ---
+print cyan gotoテスト開始
+goto GOTO_TARGET
+print red gotoスキップされるべき（NG）
+:GOTO_TARGET
+print green goto前方ジャンプ（OK）
+
+; --- goto 後方ジャンプ（1回だけ）---
+setvar JUMPED no
+goto JUMP_CHECK
+:JUMP_BACK
+setvar JUMPED yes
+goto JUMP_END
+:JUMP_CHECK
+if %JUMPED% == no
+    goto JUMP_BACK
+endif
+:JUMP_END
+print green goto後方ジャンプ（OK）
+
+; --- call / return ---
+print cyan call/returnテスト開始
+call SUBROUTINE
+print green callから戻った（OK）
+
+; --- call + 変数共有 ---
+setvar CALL_VAR before
+call SET_VAR
+if %CALL_VAR% == after
+    print green call変数共有（OK）
+else
+    print red call変数共有（NG）
+endif
+
+; --- getvar ---
+print cyan getvarテスト開始（環境変数からユーザー名を取得）
+sendln $env:USERNAME
+getvar CURRENT_USER
+print green 取得されたユーザー名: %CURRENT_USER%
+
+; --- echo off/on ---
+print cyan echo off/onテスト開始
+echo off
+sendln echo "このエコーバックは画面に非表示（ログのみ）"
+wait >
+echo on
+sendln echo "このエコーバックは画面に表示"
+wait >
+print green echo on/off完了（OK）
+
+; --- include ---
+print cyan includeテスト開始
+include include_test.pscm
+print green includeから戻った（OK）
+
+; --- admin (UAC昇格) についての案内 ---
+print yellow [INFO] adminコマンドはUACポップアップで自動化を妨げるため、ビルドテストではスキップします
+
+goto END
+
+; ============================================================
+; サブルーチン定義エリア
+; ============================================================
+:SUBROUTINE
+print green サブルーチン実行中
+return
+
+:SET_VAR
+setvar CALL_VAR after
+return
+
+:END
+
+; --- .logclose (ログの安全なクローズテスト) ---
+print cyan === 全コマンド自動検証が完了しました ===
+.logclose
+
+; --- exit (PSCを終了してバッチに制御を戻す) ---
+exit

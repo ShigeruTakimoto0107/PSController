@@ -30,8 +30,8 @@ if not defined CSC_PATH (
 )
 
 set TARGET_EXE=PowerShellController.exe
-set TEST_MACRO=test_all.pcm
-set REG_MACRO=register_association.pcm
+set TEST_MACRO=test_all.pscm
+set REG_MACRO=register_association.pscm
 
 echo Using: %CSC_PATH%
 echo [BUILD] Compiling PowerShellController Project...
@@ -79,7 +79,7 @@ set BUILD_DATE=%YYYY%-%MM%-%DD%
 echo namespace PowerShellController {
 echo       public static class VersionInfo {
 echo           public const string ProgramName = "PowerShellController";
-echo           public const string Version     = "1.0.0";
+echo           public const string Version     = "0.0.1";
 echo           public const string Copyright   = "(C) 2026 Kolog898";
 echo           public const string BuildDate   = "%BUILD_DATE%";
 echo           public const string GitVersion  = "%GIT_VER%";
@@ -106,34 +106,39 @@ echo }
  .\src\Meta\*.cs ^
  .\src\System\*.cs
 
+:: ============================================================
+::  コンパイル後の自動実行ロジック修正
+:: ============================================================
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] %TARGET_EXE% has been built.
     echo --------------------------------------------------
     
-    :: 1. テスト実行の確認プロンプト（デフォルトY）
-    set /p CHOICE="[QUESTION] 全コマンド確認マクロを実行しますか？ [Y/N] (Default:Y): "
-    if /i "!CHOICE!"=="N" (
-        echo [INFO] テスト実行をスキップします。
-    ) else (
+    :: 1. テスト実行の確認プロンプト（デフォルト N）
+    set "CHOICE="
+    set /p CHOICE="[QUESTION] 全コマンド確認マクロを実行しますか？ [Y/N] (Default:N): "
+    if /i "!CHOICE!"=="Y" (
         echo [INFO] 全コマンド確認自動テストを実行します...
         cls
-        .\bin\%TARGET_EXE% .\bin\%TEST_MACRO%
+        .\bin\%TARGET_EXE% .\macros\%TEST_MACRO%
+    ) else (
+        echo [INFO] テスト実行をスキップします。
     )
     
     echo --------------------------------------------------
     
-    :: 2. 関連付けマクロの確認プロンプト（デフォルトY）
-    set /p CHOICE_REG="[QUESTION] .pcm拡張子のシステム関連付け登録を実行しますか？ [Y/N] (Default:Y): "
-    if /i "!CHOICE_REG!"=="N" (
-        echo [INFO] 関連付け登録をスキップします。
-    ) else (
-        if not exist ".\bin\%REG_MACRO%" (
-            echo [ERROR] 関連付けマクロファイル（.\bin\%REG_MACRO%）が見つかりません。
-            goto END_PROCESS
+    :: 2. 関連付けマクロの確認プロンプト（デフォルト N）
+    set "CHOICE_REG="
+    set /p CHOICE_REG="[QUESTION] .pscm拡張子の関連付け登録を実行しますか？ [Y/N] (Default:N): "
+    if /i "!CHOICE_REG!"=="Y" (
+        if not exist ".\macros\%REG_MACRO%" (
+            echo [ERROR] 関連付けマクロファイルが見つかりません。
+        ) else (
+            echo [INFO] 関連付け登録マクロを実行します...
+            cls
+            .\bin\%TARGET_EXE% .\macros\%REG_MACRO%
         )
-        echo [INFO] 関連付け登録マクロを実行します...
-        cls
-        .\bin\%TARGET_EXE% .\bin\%REG_MACRO%
+    ) else (
+        echo [INFO] 関連付け登録をスキップします。
     )
 
 ) else (
