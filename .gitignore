@@ -1,0 +1,10 @@
+PowerShellController.exe
+convert.bat
+AllCS.txt
+Copilotプロンプト.txt
+convert.bat
+*.pdb
+bin/
+obj/
+out_md/
+backup/
