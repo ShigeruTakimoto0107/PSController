@@ -20,21 +20,11 @@ namespace PowerShellController
             var principal = new WindowsPrincipal(identity);
             bool isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
 
-            if (isAdmin)
-            {
-                // 【本筋の修正】
-                // すでに管理者で起動している場合、直後のマクロにある「wait >」が
-                // 正常にプロンプトを検出して進めるようにするため、
-                // PowerShellに空のコマンド（改行）を送信して、プロンプトを出力させます。
-                // 
-                // ★ここでは「WaitUntilMatched」で待ってはいけません。
-                // 待ってしまうとプロンプトをここで消費してしまい、直後の「wait >」がフリーズします。
-                // 送信だけして即座に終了し、待ち受けはマクロ側の「wait >」に委ねます。
-                
-                PowerShellHost.SendToPowerShell(""); // 空のコマンド（改行）を送信
-                
-                return;
-            }
+			if (isAdmin)
+			{
+			    // 空コマンド送信を削除。起動時プロンプトはマクロ側のwait >で待つ。
+			    return;
+			}
 
             // 管理者権限で自分自身を再起動
             var psi = new ProcessStartInfo();

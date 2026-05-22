@@ -252,6 +252,26 @@ echo on
 sendln Write-Output "パスワード設定完了"
 wait >
 ````
+### その他
+:wait > が必要な場面
+
+Unknownコマンド（ps1直打ちなど）を送信した後、次のコマンドを実行する前
+
+:wait > が不要な場面
+
+print、if、getvar などの内部コマンドの後
+getvar の直後（getvar 自身がプロンプトを待つ）
+pause、exit の前後
+
+:getvar の使い方
+
+直前にUnknownコマンドまたは sendln でPowerShellにコマンドを送信する
+getvar の直前に wait > を書かない
+
+:admin の仕様
+
+管理者権限あり時は何も送信しない
+起動時プロンプトはマクロ側の wait > で待つ
 
 
 ## 本ツールの安全性と基本仕様（アーキテクチャ）

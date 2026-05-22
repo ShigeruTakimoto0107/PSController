@@ -32,18 +32,18 @@ namespace PowerShellController
         public static string LastSentCommand = null;
 
         // WAIT
-        public static void BeginWait(string pattern)
-        {
-            if (pattern == null)
-                throw new ArgumentNullException("pattern");
-            lock (WaitLock)
-            {
-                WaitPattern = pattern.ToLower();
-                WaitBuffer.Length = 0;
-                WaitActive = true;
-                WaitEvent.Reset();
-            }
-        }
+		public static void BeginWait(string pattern)
+		{
+		    if (pattern == null)
+		        throw new ArgumentNullException("pattern");
+		    lock (WaitLock)
+		    {
+		        WaitPattern = pattern.ToLower();
+		        WaitBuffer.Length = 0;
+		        WaitActive = true;
+		        WaitEvent.Reset();
+		    }
+		}
 
         public static bool WaitUntilMatched()
         {
