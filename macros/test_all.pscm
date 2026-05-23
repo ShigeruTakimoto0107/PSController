@@ -165,5 +165,6 @@ return
 print cyan === 全コマンド自動検証が完了しました ===
 .logclose
 
-; --- exit (PSCを終了してバッチに制御を戻す) ---
+; --- exit 入れないと制御が戻らない ---
 exit
+

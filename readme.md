@@ -253,15 +253,36 @@ sendln Write-Output "パスワード設定完了"
 wait >
 ````
 ### その他
-:wait > が必要な場面
+wait > が必要な場面
+PowerShellにコマンドを送信した後、次の内部コマンドを実行する前。
 
-Unknownコマンド（ps1直打ちなど）を送信した後、次のコマンドを実行する前
+````text
+../macros/ps1/some.ps1
+wait >
+print cyan "次の処理..."
+sendln some_command
+wait >
+print cyan "次の処理..."
+````
+wait > が不要な場面
+1. 内部コマンドの後
+````text
+print、setvar、if、endif、pause、echo などはPowerShellに何も送らないので不要。
+````
+2. Unknownコマンドの直後に getvar が続く場合
+getvar 自身がプロンプトを待つので wait > を挟んではいけない。
+````text
+../macros/ps1/some.ps1
+getvar myvar        ← wait > 不要、かつ書いてはいけない
+````
+3. sendln の直後に getvar が続く場合
+同上。
 
-:wait > が不要な場面
-
-print、if、getvar などの内部コマンドの後
-getvar の直後（getvar 自身がプロンプトを待つ）
-pause、exit の前後
+````text
+sendln some_command
+getvar myvar        ← wait > 不要、かつ書いてはいけない
+````
+ルールの本質
 
 :getvar の使い方
 

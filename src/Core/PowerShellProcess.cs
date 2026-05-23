@@ -21,6 +21,7 @@ namespace PowerShellController
 			psi.RedirectStandardError = true;
 			psi.CreateNoWindow = true;
 			psi.Arguments = "-NoExit -ExecutionPolicy Bypass";
+			psi.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
 			process = Process.Start(psi);
 			// SendToPowerShell デリゲート登録
 			PowerShellHost.SendToPowerShell = delegate(string cmd)
