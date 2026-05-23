@@ -1,0 +1,13 @@
+wait >
+; --- admin (UAC昇格) についての案内 ---
+print yellow [INFO] adminコマンドのTEST
+Admin
+goto END
+
+:END
+print cyan === Adminコマンドが完了しました ===
+
+; --- exit 入れないと制御が戻らない ---
+pause
+exit
+

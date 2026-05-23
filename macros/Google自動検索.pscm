@@ -1,3 +1,4 @@
+echo off
 wait >
 print cyan Edge起動中...
 ../macros/ps1/Burauza_Debug_Open.ps1
@@ -16,4 +17,6 @@ print cyan 最初の１件のURLをパワーシェルに表示...
 getvar URL
 print cyan 取得したURLにナビゲート...
 sendln ../macros/ps1/Burauza_Navigate.ps1 %URL%
+wait >
 pause
+exit

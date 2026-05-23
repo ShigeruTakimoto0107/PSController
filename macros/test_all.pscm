@@ -140,7 +140,7 @@ print green echo on/off完了（OK）
 
 ; --- include ---
 print cyan includeテスト開始
-include include_test.pscm
+include Test_Include.pscm
 print green includeから戻った（OK）
 
 ; --- admin (UAC昇格) についての案内 ---

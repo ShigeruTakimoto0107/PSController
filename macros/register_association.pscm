@@ -5,8 +5,6 @@
 echo on
 admin
 wait >
-cd bin
-wait >
 ; 1. 登録状況のチェック
 print cyan [STEP 1] 登録状況を確認中...
 ..\macros\ps1\reg_check.ps1
