@@ -11,6 +11,10 @@ namespace PowerShellController
 		{
 			lastUserInput = input;
 		}
+		public static int GetProcessId()
+		{
+			return process != null ? process.Id : -1;
+		}
 		public static void Start()
 		{
 			var psi = new ProcessStartInfo();

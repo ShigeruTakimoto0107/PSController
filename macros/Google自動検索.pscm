@@ -1,4 +1,5 @@
 echo off
+Killps
 wait >
 print cyan Edge起動中...
 ../macros/ps1/Burauza_Debug_Open.ps1
