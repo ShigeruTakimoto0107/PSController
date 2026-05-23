@@ -1,6 +1,7 @@
 echo off
-Killps
 wait >
+print cyan ゾンビプロセス削除...
+Killps
 print cyan Edge起動中...
 ../macros/ps1/Burauza_Debug_Open.ps1
 wait >
