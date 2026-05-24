@@ -66,6 +66,7 @@ Root
 
 [サンプルマクロ集]
 - [Google自動検索](docs/sample001/001.md)
+- [サービス監視](docs/sample002/002.md)
 
 ## 関連リンク
 - [マクロの書き方解説](docs/guide/macros.md)
