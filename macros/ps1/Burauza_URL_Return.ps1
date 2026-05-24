@@ -1,9 +1,20 @@
+# ============================================================
+# Burauza_URL_Return.ps1
+# 検索結果ページの最初の外部リンクURLを取得する
+#
+# 【注意】このスクリプトの直前にpauseを入れてはいけません。
+# Googleは検索結果表示後もDOMを動的に書き換え続けるため、
+# 時間を置くとリンクが取得できなくなります。
+# Burauza_Google_Search.ps1の直後に実行してください。
+# ============================================================
 # --- CDP タブ一覧取得 ---
 $tabs = Invoke-RestMethod "http://127.0.0.1:9222/json/list"
 $wsUrl = $tabs[0].webSocketDebuggerUrl
 # --- WebSocket 接続 ---
 $ws = New-Object System.Net.WebSockets.ClientWebSocket
 $ws.ConnectAsync([Uri]$wsUrl, [Threading.CancellationToken]::None).Wait()
+# --- 接続直後に少し待ってから送信 ---
+Start-Sleep -Milliseconds 300
 # --- JS：最初の外部リンクを拾う ---
 $js = @'
 (() => {
@@ -34,7 +45,7 @@ $js = @'
 '@
 # --- Runtime.evaluate ---
 $cmdEval = @{
-    id = 1
+    id = 99
     method = "Runtime.evaluate"
     params = @{
         expression    = $js
@@ -44,12 +55,11 @@ $cmdEval = @{
 $bytes  = [System.Text.Encoding]::UTF8.GetBytes($cmdEval)
 $buffer = [System.ArraySegment[byte]]::new($bytes)
 $ws.SendAsync($buffer, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [Threading.CancellationToken]::None).Wait()
-# --- 応答を受信（id=1 の応答が来るまで読み続ける）---
+# --- 応答を受信（id=99 の応答が来るまで読み続ける）---
 $recvBuf = New-Object System.ArraySegment[byte] -ArgumentList (,[byte[]]::new(65536))
 $url = ""
-$timeout = 30
-$elapsed = 0
-while ($elapsed -lt $timeout) {
+$deadline = [DateTime]::Now.AddSeconds(30)
+while ([DateTime]::Now -lt $deadline) {
     $result = New-Object System.Text.StringBuilder
     do {
         $r = $ws.ReceiveAsync($recvBuf, [Threading.CancellationToken]::None).Result
@@ -57,12 +67,11 @@ while ($elapsed -lt $timeout) {
         $null = $result.Append($chunk)
     } while (-not $r.EndOfMessage)
     $msg = $result.ToString()
-    if ($msg -match '"id"\s*:\s*1') {
+    if ($msg -match '"id"\s*:\s*99') {
         $json = $msg | ConvertFrom-Json -ErrorAction SilentlyContinue
         $url = $json.result.result.value
         break
     }
-    $elapsed++
 }
 # --- URL を返す ---
 $url
