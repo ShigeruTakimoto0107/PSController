@@ -1,0 +1,5 @@
+admin
+echo off
+wait >
+sendln Start-Process powershell.exe -ArgumentList "-NoExit"
+exit

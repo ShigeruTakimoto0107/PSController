@@ -1,0 +1,4 @@
+wait >
+; 1. ハード情報取得
+print cyan ハード情報取得中...
+sendln ../macros/ps1/Hardware_Information_Acquisition.ps1

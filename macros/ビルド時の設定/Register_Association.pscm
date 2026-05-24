@@ -7,7 +7,7 @@ admin
 wait >
 ; 1. 登録状況のチェック
 print cyan [STEP 1] 登録状況を確認中...
-..\macros\ps1\reg_check.ps1
+sendln ..\macros\ps1\reg_check.ps1
 getvar status
 ; 登録済みの場合はここで終了
 if %status% == Registered
@@ -17,16 +17,16 @@ if %status% == Registered
 endif
 ; 2. EXEパスの特定
 print yellow 未登録です。関連付けを開始します...
-..\macros\ps1\find_exe.ps1
+sendln ..\macros\ps1\find_exe.ps1
 getvar my_exe
 print green EXEパスを確認しました: %my_exe%
 ; 3. レジストリへの登録実行
 print cyan レジストリを登録中...
-..\macros\ps1\reg_register.ps1
+sendln ..\macros\ps1\reg_register.ps1
 wait >
 ; 4. エクスプローラーの更新
 print cyan エクスプローラーを再起動中...
-..\macros\ps1\restart_explorer.ps1
+sendln ..\macros\ps1\restart_explorer.ps1
 wait >
 ; 5. 完了通知
 print green ----------------------------------------------------------

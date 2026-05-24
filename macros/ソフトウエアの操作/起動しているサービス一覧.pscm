@@ -1,0 +1,4 @@
+wait >
+; 1. 起動しているサービス一覧
+print cyan 起動しているサービス一覧...
+sendln ../macros/ps1/List_Of_Running_Services.ps1

@@ -3,19 +3,19 @@ wait >
 print cyan ゾンビプロセス削除...
 Killps
 print cyan Edge起動中...
-../macros/ps1/Burauza_Debug_Open.ps1
+sendln ../macros/ps1/Burauza_Debug_Open.ps1
 wait >
 setvar URL https://www.google.com/
 print cyan Google通常検索にナビゲート...
 sendln ../macros/ps1/Burauza_Navigate.ps1 %URL%
-
 wait >
 print cyan 横浜 ラーメンで検索...
-../macros/ps1/Burauza_Google_Search.ps1 "横浜 ラーメン"
+sendln ../macros/ps1/Burauza_Google_Search.ps1 "横浜 ラーメン"
 wait >
-pause 3
+;念のため
+pause 3   
 print cyan 最初の１件のURLをパワーシェルに表示...
-../macros/ps1/Burauza_URL_Return.ps1
+sendln ../macros/ps1/Burauza_URL_Return.ps1
 getvar URL
 print cyan 取得したURLにナビゲート...
 sendln ../macros/ps1/Burauza_Navigate.ps1 %URL%

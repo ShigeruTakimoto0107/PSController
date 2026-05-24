@@ -30,8 +30,8 @@ if not defined CSC_PATH (
 )
 
 set TARGET_EXE=PowerShellController.exe
-set TEST_MACRO=Test_All.pscm
-set REG_MACRO=Register_Association.pscm
+set TEST_MACRO=ビルド時の設定\コマンドTEST.pscm
+set REG_MACRO=ビルド時の設定\Register_Association.pscm
 
 echo Using: %CSC_PATH%
 echo [BUILD] Compiling PowerShellController Project...

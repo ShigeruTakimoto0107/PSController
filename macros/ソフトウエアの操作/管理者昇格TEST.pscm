@@ -2,10 +2,8 @@ wait >
 ; --- admin (UAC昇格) についての案内 ---
 print yellow [INFO] adminコマンドのTEST
 Admin
-goto END
-
-:END
-print cyan === Adminコマンドが完了しました ===
+print cyan 権限表示中...
+../macros/ps1/Permissions_Display.ps1
 
 ; --- exit 入れないと制御が戻らない ---
 pause

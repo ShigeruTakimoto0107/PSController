@@ -1,0 +1,2 @@
+wait >
+sendln ./ps1/restart_explorer.ps1

@@ -141,6 +141,7 @@ print green echo on/off完了（OK）
 ; --- include ---
 print cyan includeテスト開始
 include Test_Include.pscm
+
 print green includeから戻った（OK）
 
 ; --- admin (UAC昇格) についての案内 ---
@@ -163,8 +164,11 @@ return
 
 ; --- .logclose (ログの安全なクローズテスト) ---
 print cyan === 全コマンド自動検証が完了しました ===
+
 .logclose
 
+print cyan === ３秒停止します ===
+pause 3
 ; --- exit 入れないと制御が戻らない ---
 exit
 

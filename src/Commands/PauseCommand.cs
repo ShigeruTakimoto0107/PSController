@@ -13,7 +13,10 @@ namespace PowerShellController
         {
             if (string.IsNullOrEmpty(arg))
             {
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("続行するには何かキーを押してください...");
+                Console.ResetColor();
                 Console.ReadKey(true);
                 return;
             }

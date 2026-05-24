@@ -1,0 +1,4 @@
+wait >
+; 1. メディアトレイを自動でOpen
+print cyan メディアトレイを自動でOpen...
+sendln ../macros/ps1/Automatically_open_the_media_tray.ps1

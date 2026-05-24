@@ -1,0 +1,6 @@
+wait >
+; 1. OS情報取得
+print cyan OS情報取得中...
+sendln ../macros/ps1/OS_Information_Aacquisition.ps1
+wait >
+pause
