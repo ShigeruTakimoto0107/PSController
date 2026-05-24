@@ -50,6 +50,19 @@ Root
 - "Y" を入力（またはそのままEnter）すると、画面が切り替わり「test_all.pscm」が自動追従で走り出します。全コマンドがノンストップで自動検証され、実行ログが「logs」フォルダに安全に出力されます。
 - "N" を入力すると、テストを実行せずにビルドのみで安全に終了します。
 
+# PowerShellController
+
+## ドキュメント
+- [設計仕様書](docs/design/architecture.md)
+
+[サンプルマクロ集]
+- [Google自動検索](docs/samples/s001/README.md)
+
+## 関連リンク
+- [マクロの書き方解説](docs/guide/macros.md)
+
+
+
 
 ## ディレクトリ構成
 
@@ -130,17 +143,6 @@ Root
             ExitCommand.cs       (exit コントローラの安全な終了処理)
             KillPsCommand.cs     (killps 自分以外のPowerShellプロセスを強制終了)
 ```
-# PowerShellController
-
-## ドキュメント
-- [設計仕様書](docs/design/architecture.md)
-- [サンプルマクロ集](docs/samples/README.md)
-
-## 関連リンク
-- [マクロの書き方解説](docs/guide/macros.md)
-
-
-
 
 ## 本ツールの安全性と基本仕様（アーキテクチャ）
 
