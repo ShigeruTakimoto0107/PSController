@@ -56,7 +56,7 @@ Root
 - [設計仕様書](docs/design/architecture.md)
 
 [サンプルマクロ集]
-- [Google自動検索](docs/sample001/README.md)
+- [Google自動検索](docs/sample001/001.md)
 
 ## 関連リンク
 - [マクロの書き方解説](docs/guide/macros.md)
