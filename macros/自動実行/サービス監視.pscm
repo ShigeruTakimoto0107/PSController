@@ -1,0 +1,77 @@
+; Admin,Echoはwait >の前でも問題ない。
+admin
+echo on
+; 【対策】パワーシェル開始メッセージなどの余計な出力をここで一旦やり過ごす
+wait >
+
+; --- ログ記録の開始 ---
+print cyan [INFO] サービス監視ログの記録を開始します...
+.logopen ../logs/Service_Monitor.log
+
+; 【対策】Transcript開始メッセージなどの余計な出力をここで一旦やり過ごす
+wait >
+
+print cyan --------------------------------------------------
+print cyan [INFO] Windows サービス死活監視 (Print Spooler)
+print cyan --------------------------------------------------
+
+; 変数領域をあらかじめ確保（初期化）
+setvar SERVICE_STATUS ""
+
+; 状態確認用のPowerShellコマンド
+(Get-Service -Name Spooler).Status
+
+; 直前の出力を即座に変数へ取得
+getvar SERVICE_STATUS
+
+; --- 条件分岐（死活監視） ---
+if "%SERVICE_STATUS%" == "Running"
+    print green [OK] Print Spooler サービスは正常に稼働しています。
+    goto END_PROCESS
+endif
+
+if "%SERVICE_STATUS%" == "Stopped"
+    print red [ALERT] Print Spooler サービスが停止しています！復旧処理を開始します...
+    
+    ; サービス起動コマンドを送信
+    Start-Service -Name Spooler
+    wait >
+    
+    ; 復旧確認のために3秒待機してから再チェック
+    pause 3
+    
+    print cyan [INFO] 復旧後のステータスを再確認中...
+    
+    ; 復旧確認用の変数領域をあらかじめ確保
+    setvar NEW_STATUS ""
+    
+    ; ステータス再取得コマンド
+    (Get-Service -Name Spooler).Status
+    
+    ; 即座に取得
+    getvar NEW_STATUS
+    
+    ; Unknownコマンドのあとsetvar,getvarがある場合、プロンプトをgetvarが使用するので、wait >は不要
+    
+    if "%NEW_STATUS%" == "Running"
+        print green [SUCCESS] サービスの自動起動に成功しました。正常状態に復帰しました。
+    else
+        print red [ERROR] サービスの自動起動に失敗しました。手動での確認が必要です。
+    endif
+else
+    ; 想定外のステータス（StoppingやStarting、または文字列混入時）の場合
+    print yellow [WARNING] サービスが不安定な状態です（現在の状態: %SERVICE_STATUS%）。
+endif
+
+:END_PROCESS
+print cyan --------------------------------------------------
+print cyan [INFO] 監視処理が完了しました。
+print cyan --------------------------------------------------
+
+; --- ログ記録の終了と終了処理 ---
+.logclose
+; 【対策】Transcript終了メッセージなどの余計な出力をここで一旦やり過ごす
+wait >
+
+pause
+exit

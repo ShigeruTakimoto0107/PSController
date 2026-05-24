@@ -90,9 +90,18 @@ namespace PowerShellController
 						// キャプチャモード中は画面に出さずバッファに溜める
 						if (PowerShellHost.CaptureMode)
 						{
+							// インタラクティブ入力のエコーバック抑制
 							if (lastUserInput != null &&
 								string.Equals(line, lastUserInput, StringComparison.Ordinal))
 							{
+								buffer = "";
+								continue;
+							}
+							// echo on 時のエコーバック抑制（LastSentCommandと一致する行を読み捨て）
+							if (PowerShellHost.LastSentCommand != null &&
+								string.Equals(line, PowerShellHost.LastSentCommand, StringComparison.Ordinal))
+							{
+								PowerShellHost.LastSentCommand = null;
 								buffer = "";
 								continue;
 							}
