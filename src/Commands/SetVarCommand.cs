@@ -16,9 +16,13 @@ namespace PowerShellController
             if (string.IsNullOrEmpty(arg)) return;
 
             var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) return;
+			if (parts.Length < 2)
+			{
+			    ctx.SetVar(parts[0], "");
+			    return;
+			}
+			ctx.SetVar(parts[0], ctx.Expand(parts[1]));
 
-            ctx.SetVar(parts[0], ctx.Expand(parts[1]));
         }
     }
 }

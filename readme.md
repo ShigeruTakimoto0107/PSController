@@ -68,6 +68,7 @@ Root
 - [Google自動検索](docs/sample001/001.md)
 - [サービス監視](docs/sample002/002.md)
 - [ZIP圧縮バックアップとリストア](docs/sample003/003.md)
+- [SSH公開鍵認証テスト環境](docs/sample004/004.md)
 
 ## 関連リンク
 - [マクロの書き方解説](docs/guide/macros.md)
@@ -87,10 +88,30 @@ Root
 │      PSC.ico        (生成されるEXEに埋め込まれる専用アイコン)
 │
 ├─macros              (ユーザー用マクロ配置ROOT)
-│  │  1_関連付け登録.pscm  (Windowsに.pscm拡張子をクリーン登録するマクロ)
-│  │  2_関連付け削除.pscm  (登録したレジストリを安全に全削除するマクロ)
+│  │  1_関連付け登録.pscm      (Windowsに.pscm拡張子をクリーン登録するマクロ)
+│  │  2_関連付け削除.pscm      (登録したレジストリを安全に全削除するマクロ)
+│  │  SSH環境セットアップ.pscm  (SSHテスト環境の構築)
+│  │  SSH環境削除.pscm         (SSHテスト環境の削除)
+│  │  SSHユーザー削除.pscm     (再起動後のテストユーザー削除)
+│  │  SSHログインテスト（公開鍵認証）.pscm  (SSH公開鍵認証ログインテスト)
+│  │  ZIPテスト用データの準備.pscm  (バックアップテスト用データ生成)
+│  │  ZIPバックアップ圧縮.pscm     (ZIPバックアップ圧縮)
+│  │  ZIPリストア解凍.pscm         (ZIPリストア解凍)
+│  │  サービス監視.pscm            (サービス監視)
+│  │  自動検索.pscm               (Google自動検索)
 │  │  include_test.pscm
 │  │  test_all.pscm
+│  │
+│  ├─include          (子マクロ群)
+│  │      ssh_keygen.pscm
+│  │      ssh_keygen_delete.pscm
+│  │      ssh_openssh_check.pscm
+│  │      ssh_openssh_install.pscm
+│  │      ssh_openssh_Start-Service.pscm
+│  │      ssh_openssh_uninstall.pscm
+│  │      ssh_user_check.pscm
+│  │      ssh_user_create.pscm
+│  │      ssh_user_delete.pscm
 │  │
 │  └─ps1              (単機能ごとに細分化された内部PowerShellスクリプト群)
 │          find_exe.ps1

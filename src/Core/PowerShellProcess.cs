@@ -27,13 +27,12 @@ namespace PowerShellController
 			psi.Arguments = "-NoExit -ExecutionPolicy Bypass";
 			psi.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
 			process = Process.Start(psi);
-			// SendToPowerShell デリゲート登録
+			process.StandardInput.Flush();
 			PowerShellHost.SendToPowerShell = delegate(string cmd)
 			{
 				process.StandardInput.WriteLine(cmd);
 				process.StandardInput.Flush();
 			};
-			// 標準出力監視タスク
 			Task.Run(() =>
 			{
 				string buffer = "";
@@ -43,7 +42,6 @@ namespace PowerShellController
 					if (ch < 0) break;
 					char c = (char)ch;
 					buffer += c;
-					// WAIT ロジック
 					lock (PowerShellHost.WaitLock)
 					{
 						if (PowerShellHost.WaitActive)
@@ -57,7 +55,6 @@ namespace PowerShellController
 							}
 						}
 					}
-					// プロンプト検出
 					if (buffer.EndsWith(PowerShellHost.PromptPattern + " "))
 					{
 						if (!PowerShellHost.CaptureMode)
@@ -67,10 +64,8 @@ namespace PowerShellController
 						}
 						else
 						{
-							// キャプチャモード終了
 							PowerShellHost.CaptureMode = false;
 							PowerShellHost.PromptWritten = true;
-							// WaitActiveのときだけSetする
 							lock (PowerShellHost.WaitLock)
 							{
 								if (PowerShellHost.WaitActive)
@@ -83,21 +78,17 @@ namespace PowerShellController
 						buffer = "";
 						continue;
 					}
-					// 改行処理
 					if (c == '\n')
 					{
 						string line = buffer.TrimEnd('\r', '\n');
-						// キャプチャモード中は画面に出さずバッファに溜める
 						if (PowerShellHost.CaptureMode)
 						{
-							// インタラクティブ入力のエコーバック抑制
 							if (lastUserInput != null &&
 								string.Equals(line, lastUserInput, StringComparison.Ordinal))
 							{
 								buffer = "";
 								continue;
 							}
-							// echo on 時のエコーバック抑制（LastSentCommandと一致する行を読み捨て）
 							if (PowerShellHost.LastSentCommand != null &&
 								string.Equals(line, PowerShellHost.LastSentCommand, StringComparison.Ordinal))
 							{
@@ -110,7 +101,6 @@ namespace PowerShellController
 							buffer = "";
 							continue;
 						}
-						// echo off 時の sendln/Unknown エコーバック抑制
 						if (!PowerShellHost.EchoBack &&
 							PowerShellHost.LastSentCommand != null &&
 							string.Equals(line, PowerShellHost.LastSentCommand,
@@ -120,7 +110,6 @@ namespace PowerShellController
 							buffer = "";
 							continue;
 						}
-						// インタラクティブ入力のエコーバック抑制
 						if (lastUserInput != null &&
 							string.Equals(line, lastUserInput, StringComparison.Ordinal))
 						{
@@ -132,14 +121,27 @@ namespace PowerShellController
 					}
 				}
 			});
-			// 標準エラー監視タスク
 			Task.Run(() =>
 			{
 				while (true)
 				{
 					int ch = process.StandardError.Read();
 					if (ch < 0) break;
-					Console.Write((char)ch);
+					char c = (char)ch;
+					Console.Write(c);
+					lock (PowerShellHost.WaitLock)
+					{
+						if (PowerShellHost.WaitActive)
+						{
+							PowerShellHost.WaitBuffer.Append(char.ToLower(c));
+							if (PowerShellHost.WaitBuffer.ToString().Contains(PowerShellHost.WaitPattern))
+							{
+								PowerShellHost.WaitActive = false;
+								PowerShellHost.WaitEvent.Set();
+								PowerShellHost.WaitBuffer.Length = 0;
+							}
+						}
+					}
 				}
 			});
 		}

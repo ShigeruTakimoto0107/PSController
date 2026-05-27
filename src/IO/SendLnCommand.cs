@@ -11,7 +11,7 @@ namespace PowerShellController
 
         public void Execute(string arg, ExecutionContext ctx)
         {
-            if (string.IsNullOrEmpty(arg)) return;
+            if (string.IsNullOrEmpty(arg)) arg = "";  //引数なしなら改行
 
             if (!PowerShellHost.PromptWritten)
                 throw new MacroAbortException(

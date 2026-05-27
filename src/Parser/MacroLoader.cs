@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
 namespace PowerShellController
 {
     public static class MacroLoader
@@ -10,10 +9,8 @@ namespace PowerShellController
         {
             return LoadInternal(path, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
         }
-
         private static List<MacroLine> LoadInternal(string path, HashSet<string> loaded)
         {
-            // 循環参照防止
             string fullPath = Path.GetFullPath(path);
             if (loaded.Contains(fullPath))
             {
@@ -23,27 +20,18 @@ namespace PowerShellController
                 return new List<MacroLine>();
             }
             loaded.Add(fullPath);
-
             string fileName = Path.GetFileName(fullPath);
             var list = new List<MacroLine>();
             int lineNumber = 0;
-
             foreach (var raw in File.ReadAllLines(fullPath))
             {
                 lineNumber++;
-
-                // 空行・空白行は無視
                 if (string.IsNullOrWhiteSpace(raw))
                     continue;
-
                 string line = raw.Trim();
-
-                // コメント行除去（; # //）
                 if (line.StartsWith(";")) continue;
                 if (line.StartsWith("#")) continue;
                 if (line.StartsWith("//")) continue;
-
-                // include 処理
                 if (line.StartsWith("include", StringComparison.OrdinalIgnoreCase))
                 {
                     string arg = line.Substring("include".Length).Trim();
@@ -54,11 +42,8 @@ namespace PowerShellController
                         Console.ResetColor();
                         continue;
                     }
-
-                    // 相対パスは親ファイルのディレクトリ基準
                     if (!Path.IsPathRooted(arg))
                         arg = Path.Combine(Path.GetDirectoryName(fullPath), arg);
-
                     if (!File.Exists(arg))
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
@@ -66,16 +51,26 @@ namespace PowerShellController
                         Console.ResetColor();
                         continue;
                     }
-
-                    // 再帰的に読み込んで展開
                     list.AddRange(LoadInternal(arg, loaded));
                     continue;
                 }
-
-                // 実行対象行として追加
-                list.Add(new MacroLine(line, fileName, lineNumber));
+				list.Add(new MacroLine(line, fileName, lineNumber));
             }
-
+            // 重複ラベルチェック
+            var labelSeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var ml in list)
+            {
+                string trimmed = ml.Text.Trim();
+                if (trimmed.StartsWith(":"))
+                {
+                    string label = trimmed.Substring(1).Trim();
+                    if (!labelSeen.Add(label))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+						throw new MacroAbortException("[ERROR] 重複ラベルを検出しました: :" + label + " [" + ml.FileName + ":" + ml.LineNumber + "]");
+                    }
+                }
+            }
             return list;
         }
     }

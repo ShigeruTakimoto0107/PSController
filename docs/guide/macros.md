@@ -31,6 +31,9 @@ Write-Output %MY_VAR%
 #### `sendln コマンド文字列`
 PowerShellに任意のコマンドを送信します。変数は自動展開されます。動作はコマンドの直接記述（Unknownコマンド）と完全に同等です。
 
+**注意事項：**
+- 引数なしで記述すると、改行のみが送信されます。include の子マクロ末尾でプロンプトを親マクロに返す際に使用します。
+
 ```text
 sendln Get-Date
 sendln ../macros/ps1/some.ps1 %ARG%
@@ -84,11 +87,11 @@ getvar myvar
 ---
 
 #### `waitto 秒数 パターン`
-指定した秒数以内に指定パターンが出現するまで待機します。タイムアウト時は `LastWaitResult` に `false` がセットされ、`if` で分岐できます。
+指定した秒数以内に指定パターンが出現するまで待機します。タイムアウト時は `lastwait` に `ng` がセットされ、`if` で分岐できます。
 
 ```text
 waitto 10 completed
-if %LastWaitResult% == false
+if lastwait == ng
     print red "タイムアウトしました"
 endif
 ```
@@ -128,10 +131,13 @@ getvar status   ← タイムアウトして空文字になる
 
 #### `setvar 変数名 値`
 変数を定義または上書きします。
+第二引数がない場合は空文字で変数領域だけ確保します。
+
 
 ```text
 setvar URL https://www.google.com/
 setvar RETRY 3
+setvar BUFF
 ```
 
 ---
@@ -248,7 +254,7 @@ endloop
 ```text
 loop
     waitto 5 completed
-    if %LastWaitResult% == true
+    if lastwait == ok
         break
     endif
 endloop
@@ -301,7 +307,7 @@ include common.pscm
 
 **注意事項：**
 - 循環参照（AがBを呼び、BがAを呼ぶ）は内部パーサーで自動検出し、実行前に厳格にブロックします。
-
+- 展開後のマクロ全体で重複するラベルが存在する場合は、実行前に `[ERROR]` で即時停止します。include で複数の子マクロをつなぐ場合はラベル名をユニークにしてください。
 ---
 
 ### システム制御
