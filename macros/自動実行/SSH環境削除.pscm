@@ -1,0 +1,15 @@
+; SSH環境削除.pscm
+admin
+echo on
+wait >
+print cyan Deleting SSH key files...
+include .\include\ssh_keygen_delete.pscm
+wait >
+print cyan Uninstalling OpenSSH...
+include .\include\ssh_openssh_uninstall.pscm
+wait >
+print green [FINISH] Cleanup completed.
+print yellow [NOTE] Please reboot your PC.
+print yellow [NOTE] After reboot, run SSHユーザー削除.pscm to delete psctest user.
+pause
+exit

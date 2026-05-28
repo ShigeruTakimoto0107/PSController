@@ -1,0 +1,34 @@
+; SSH Keygen Delete
+;admin
+;echo on
+;wait >
+print cyan Checking psctest_key...
+setvar key_exists
+(Test-Path "$env:USERPROFILE\.ssh\psctest_key")
+getvar key_exists
+if %key_exists% == False
+    print blue psctest_key not found. Skip.
+    goto END_KEYGEN_DELETE
+endif
+print cyan [1/4] Deleting SSH key files...
+sendln if (Test-Path "$env:USERPROFILE\.ssh\psctest_key") { Remove-Item "$env:USERPROFILE\.ssh\psctest_key" -Force }
+wait >
+sendln if (Test-Path "$env:USERPROFILE\.ssh\psctest_key.pub") { Remove-Item "$env:USERPROFILE\.ssh\psctest_key.pub" -Force }
+wait >
+print cyan [2/4] Taking ownership and resetting permissions of authorized_keys...
+sendln if (Test-Path "C:\Users\psctest\.ssh\authorized_keys") { takeown /F "C:\Users\psctest\.ssh\authorized_keys" /A }
+wait >
+sendln if (Test-Path "C:\Users\psctest\.ssh\authorized_keys") { icacls "C:\Users\psctest\.ssh\authorized_keys" /reset }
+wait >
+print cyan [3/4] Deleting authorized_keys...
+sendln if (Test-Path "C:\Users\psctest\.ssh\authorized_keys") { Remove-Item "C:\Users\psctest\.ssh\authorized_keys" -Force }
+wait >
+print cyan [4/4] Deleting .ssh folder...
+sendln if (Test-Path "C:\Users\psctest\.ssh") { Remove-Item "C:\Users\psctest\.ssh" -Recurse -Force }
+wait >
+print green Key files deleted.
+:END_KEYGEN_DELETE
+sendln
+;print green [FINISH] 鍵削除完了
+;pause
+;exit

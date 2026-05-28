@@ -1,0 +1,9 @@
+wait >
+Admin
+; 1. レジストリ登録情報削除中
+print cyan レジストリ登録情報削除中中...
+sendln ../macros/ps1/remove_pscmHKLM.ps1
+wait >
+; . エクスプローラーの更新
+print cyan エクスプローラーを再起動中...
+sendln ../macros/ps1/restart_explorer.ps1

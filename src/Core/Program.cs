@@ -45,7 +45,8 @@ namespace PowerShellController
 				}            
 			}
             // PowerShell プロセス起動・出力監視開始
-            PowerShellProcess.Start();
+            //PowerShellProcess.Start();
+            ConPtyProcess.Start();
             // コマンドレジストリ・実行コンテキスト初期化
             var registry = new CommandRegistry();
             CommandRegistryBuilder.Build(registry);
@@ -56,23 +57,26 @@ namespace PowerShellController
             // マクロ実行
             if (lines != null)
                 MacroRunner.Run(lines, registry, ctx);
-            // ============================
-            // インタラクティブ入力ループ
-            // ============================
-            while (true)
-            {
-                string input = Console.ReadLine();
-                if (!string.IsNullOrEmpty(input))
-                    PowerShellProcess.SetLastUserInput(input);
-                else
-                    PowerShellProcess.SetLastUserInput(null);
-                PowerShellHost.SendToPowerShell(input);
-                if (string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
-                {
-                    Thread.Sleep(200);
-                    Environment.Exit(0);
-                }
-            }
+			// ============================
+			// インタラクティブ入力ループ
+			// ============================
+			while (true)
+			{
+			    string input = Console.ReadLine();
+			    if (input == null) break;
+			    if (string.IsNullOrEmpty(input)) continue;
+				// 変更後
+				input = input.Trim();
+				if (string.IsNullOrEmpty(input)) continue;
+				PowerShellHost.SendToPowerShell(input);
+
+			    if (string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
+			    {
+			        Thread.Sleep(200);
+			        Environment.Exit(0);
+			    }
+			}
+			return 0;
         }
     }
 }

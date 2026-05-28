@@ -1,0 +1,20 @@
+; SSH環境セットアップ.pscm
+; テストユーザー作成・SSH起動・公開鍵認証設定
+admin
+echo on
+wait >
+print cyan OpenSSH インストール...
+include .\include\ssh_openssh_install.pscm
+wait >
+print cyan OpenSSH サービススタート...
+include .\include\ssh_openssh_Start-Service.pscm
+wait >
+print cyan ユーザー作成...
+include .\include\ssh_user_create.pscm
+wait >
+print cyan 鍵ペア作成...
+include .\include\ssh_keygen.pscm
+wait >
+print green [FINISH] セットアップ完了
+pause
+exit

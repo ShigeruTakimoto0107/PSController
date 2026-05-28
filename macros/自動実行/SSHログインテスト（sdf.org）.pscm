@@ -1,0 +1,18 @@
+; SSHログインテスト（sdf.org パスワード認証）
+; 事前にtty.sdf.orgのアカウントを作成してください
+; https://sdf.org
+echo on
+wait >
+print cyan [1/2] 別ウィンドウでSSHログインします...
+print yellow [NOTE] 新しいウィンドウが開きます
+print yellow [NOTE] パスワードを入力してログインしてください
+print yellow [NOTE] 操作が終わったらexitでウィンドウを閉じてください
+exec powershell -Command "ssh pscuser@tty.sdf.org; Read-Host 'Enterで閉じます'"
+if %ExecResult% == 0
+    print green [2/2] SSHセッション正常終了
+else
+    print red [2/2] SSHセッションがエラーで終了しました ExecResult:%ExecResult%
+endif
+print green [FINISH] SSHログインテスト完了
+pause
+exit

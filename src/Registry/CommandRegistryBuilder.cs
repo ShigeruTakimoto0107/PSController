@@ -29,6 +29,7 @@ namespace PowerShellController
             new GetVarCommand().Register(registry);
             new EchoCommand().Register(registry);
             new KillPsCommand().Register(registry);
+            new ExecCommand().Register(registry);
         }
     }
 }
