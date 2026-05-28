@@ -118,8 +118,8 @@ namespace PowerShellController
 
         private static string _lastSentCommand = null;
         private static bool   _promptReady     = false;
-		private static bool _afterPrompt = false;
-		
+        private static bool   _afterPrompt     = false;
+
         public static void Start()
         {
             const int STD_OUTPUT_HANDLE = -11;
@@ -219,20 +219,20 @@ namespace PowerShellController
                     isFirst = false;
                 }
 
-                lock (PowerShellHost.WaitLock)
-                {
-                    if (PowerShellHost.WaitActive)
-                    {
-                        PowerShellHost.WaitBuffer.Append(text.ToLower());
-                        if (PowerShellHost.WaitBuffer.ToString()
-                                .Contains(PowerShellHost.WaitPattern))
-                        {
-                            PowerShellHost.WaitActive = false;
-                            PowerShellHost.WaitEvent.Set();
-                            PowerShellHost.WaitBuffer.Length = 0;
-                        }
-                    }
-                }
+				lock (PowerShellHost.WaitLock)
+				{
+				    if (PowerShellHost.WaitActive)
+				    {
+				        PowerShellHost.WaitBuffer.Append(text.ToLower());
+				        if (PowerShellHost.WaitBuffer.ToString()
+				                .Contains(PowerShellHost.WaitPattern))
+				        {
+				            PowerShellHost.WaitActive = false;
+				            PowerShellHost.WaitEvent.Set();
+				            PowerShellHost.WaitBuffer.Length = 0;
+				        }
+				    }
+				}
 
                 foreach (char c in text)
                 {
@@ -266,18 +266,26 @@ namespace PowerShellController
 
         private static void OutputLine(string line)
         {
-            // エコーバック抑制（完全一致）
-            if (_lastSentCommand != null &&
-                (string.Equals(line, _lastSentCommand,
-                     StringComparison.Ordinal) ||
-                 string.Equals(line.TrimStart('>', ' '),
-                     _lastSentCommand, StringComparison.Ordinal)))
-            {
-                _lastSentCommand = null;
-                return;
-            }
+			// 変更後
+			if (_lastSentCommand != null)
+			{
+			    string trimmed = line.TrimStart('>', ' ');
+			    if (string.Equals(line, _lastSentCommand,
+			            StringComparison.Ordinal) ||
+			        string.Equals(trimmed, _lastSentCommand,
+			            StringComparison.Ordinal) ||
+			        _lastSentCommand.StartsWith(trimmed,
+			            StringComparison.Ordinal) && trimmed.Length > 0)
+			    {
+			        if (string.Equals(line, _lastSentCommand,
+			                StringComparison.Ordinal) ||
+			            string.Equals(trimmed, _lastSentCommand,
+			                StringComparison.Ordinal))
+			            _lastSentCommand = null;
+			        return;
+			    }
+			}
 
-            // エコーバック抑制（前方一致：コマンド名だけのエコー）
             if (_lastSentCommand != null &&
                 line.Length > 0 &&
                 _lastSentCommand.StartsWith(line, StringComparison.Ordinal))
@@ -285,35 +293,32 @@ namespace PowerShellController
                 return;
             }
 
-            // ノイズ行抑制
             if (line == ">" || line == ">>" || line == ">> ")
                 return;
 
-			// プロンプト行（\n付きで来た場合）
+			// 変更後
 			if (line.Contains("PS ") && line.TrimEnd().EndsWith(">"))
 			{
 			    Console.Write(line.TrimEnd() + " ");
 			    if (!_promptReady)
 			        _promptReady = true;
 			    _afterPrompt = true;
+			    PowerShellHost.PromptWritten = true;
 			    return;
 			}
 
-			// 変更後
-			// プロンプト直後の空行を抑制
-			if (_afterPrompt)
-			{
-			    if (line.Length == 0)
-			        return;
-			    _afterPrompt = false;
-			}
+            if (_afterPrompt)
+            {
+                if (line.Length == 0)
+                    return;
+                _afterPrompt = false;
+            }
 
-			Console.WriteLine(line);
+            Console.WriteLine(line);
         }
 
         private static void OutputRemaining(string remaining)
         {
-            // エコーバック抑制（完全一致）
             if (_lastSentCommand != null &&
                 (string.Equals(remaining, _lastSentCommand,
                      StringComparison.Ordinal) ||
@@ -324,7 +329,6 @@ namespace PowerShellController
                 return;
             }
 
-            // エコーバック抑制（前方一致）
             if (_lastSentCommand != null &&
                 remaining.Length > 0 &&
                 _lastSentCommand.StartsWith(remaining, StringComparison.Ordinal))
@@ -332,19 +336,20 @@ namespace PowerShellController
                 return;
             }
 
-            // ノイズ行抑制
             if (remaining == ">" || remaining == ">>" || remaining == ">> ")
                 return;
 
+			// 変更後
 			if (remaining.Contains("PS ") && remaining.TrimEnd().EndsWith(">"))
 			{
 			    Console.Write(remaining.TrimEnd() + " ");
 			    _afterPrompt = true;
+			    PowerShellHost.PromptWritten = true;
 			}
-			else
-			{
-			    Console.Write(remaining);
-			}
+            else
+            {
+                Console.Write(remaining);
+            }
         }
     }
 }
