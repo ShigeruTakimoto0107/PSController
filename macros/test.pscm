@@ -1,4 +1,4 @@
 wait >
 sendln Write-Host "hello from macro"
-;wait >
-print マクロ完了
+wait >
+print cyan マクロ完了

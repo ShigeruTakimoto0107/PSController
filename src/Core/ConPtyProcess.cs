@@ -118,8 +118,8 @@ namespace PowerShellController
 
         private static string _lastSentCommand = null;
         private static bool   _promptReady     = false;
-		internal static int _skipEmptyLines = 0;
-		
+
+
         public static void Start()
         {
             const int STD_OUTPUT_HANDLE = -11;
@@ -143,6 +143,8 @@ namespace PowerShellController
                     "CreatePipe(Out) 失敗: " + Marshal.GetLastWin32Error());
 
             var size = new COORD { X = 120, Y = 30 };
+//            var size = new COORD { X =300, Y = 200 };
+//            var size = new COORD { X = 9999, Y = 9999 };
             int hr = CreatePseudoConsole(
                 size, hPipeInRead, hPipeOutWrite, 0, out _hPC);
             if (hr != 0)
@@ -180,15 +182,16 @@ namespace PowerShellController
                     "CreateProcess 失敗: " + Marshal.GetLastWin32Error());
             CloseHandle(pi.hThread);
 
-            PowerShellHost.SendToPowerShell = delegate(string cmd)
-            {
-                _lastSentCommand = cmd;
-                byte[] bytes =
-                    System.Text.Encoding.UTF8.GetBytes(cmd + "\r\n");
-                uint written;
-                WriteFile(_hInput, bytes, (uint)bytes.Length,
-                    out written, IntPtr.Zero);
-            };
+			PowerShellHost.SendToPowerShell = delegate(string cmd)
+			{
+			    if (!string.IsNullOrEmpty(cmd))
+			        _lastSentCommand = cmd;
+			    byte[] bytes =
+			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r\n");
+			    uint written;
+			    WriteFile(_hInput, bytes, (uint)bytes.Length,
+			        out written, IntPtr.Zero);
+			};
 
             Task.Run((Action)ReadOutputLoop);
         }
@@ -205,6 +208,21 @@ namespace PowerShellController
                 uint bytesRead;
                 bool ok = ReadFile(_hOutput, buf, (uint)buf.Length,
                     out bytesRead, IntPtr.Zero);
+                /*
+				// デバッグ：HEXダンプ
+				var hex = new System.Text.StringBuilder();
+				for (int di = 0; di < (int)bytesRead; di++)
+				{
+				    hex.Append(buf[di].ToString("X2") + " ");
+				    if ((di + 1) % 16 == 0) hex.Append("\n");
+				}
+				Console.WriteLine("=HEX=");
+				Console.WriteLine(hex.ToString());
+				Console.WriteLine("=END=");                    */
+                    
+                    
+                    
+                    
                 if (!ok || bytesRead == 0) break;
 
                 string raw = System.Text.Encoding.UTF8.GetString(
@@ -219,20 +237,20 @@ namespace PowerShellController
                     isFirst = false;
                 }
 
-				lock (PowerShellHost.WaitLock)
-				{
-				    if (PowerShellHost.WaitActive)
-				    {
-				        PowerShellHost.WaitBuffer.Append(text.ToLower());
-				        if (PowerShellHost.WaitBuffer.ToString()
-				                .Contains(PowerShellHost.WaitPattern))
-				        {
-				            PowerShellHost.WaitActive = false;
-				            PowerShellHost.WaitEvent.Set();
-				            PowerShellHost.WaitBuffer.Length = 0;
-				        }
-				    }
-				}
+                lock (PowerShellHost.WaitLock)
+                {
+                    if (PowerShellHost.WaitActive)
+                    {
+                        PowerShellHost.WaitBuffer.Append(text.ToLower());
+                        if (PowerShellHost.WaitBuffer.ToString()
+                                .Contains(PowerShellHost.WaitPattern))
+                        {
+                            PowerShellHost.WaitActive = false;
+                            PowerShellHost.WaitEvent.Set();
+                            PowerShellHost.WaitBuffer.Length = 0;
+                        }
+                    }
+                }
 
                 foreach (char c in text)
                 {
@@ -248,24 +266,25 @@ namespace PowerShellController
                     }
                 }
 
-                if (lineBuf.Length > 0)
-                {
-                    string remaining = lineBuf.ToString();
-                    bool isPrompt = remaining.Contains("PS ") &&
-                                    remaining.TrimEnd().EndsWith(">");
-                    if (isPrompt)
-                    {
-                        OutputRemaining(remaining);
-                        lineBuf.Length = 0;
-                        if (!_promptReady)
-                            _promptReady = true;
-                    }
-                }
+				if (lineBuf.Length > 0)
+				{
+				    string remaining = lineBuf.ToString();
+				    bool isPrompt = remaining.Contains("PS ") &&
+				                    remaining.TrimEnd().EndsWith(">");
+				    if (isPrompt)
+				    {
+				        OutputRemaining(remaining);
+				        lineBuf.Length = 0;
+				        if (!_promptReady)
+				            _promptReady = true;
+				    }
+				}
             }
         }
 
         private static void OutputLine(string line)
         {
+            // エコーバック抑制（完全一致）
 			// 変更後
 			if (_lastSentCommand != null)
 			{
@@ -274,52 +293,48 @@ namespace PowerShellController
 			            StringComparison.Ordinal) ||
 			        string.Equals(trimmed, _lastSentCommand,
 			            StringComparison.Ordinal) ||
-			        _lastSentCommand.StartsWith(trimmed,
-			            StringComparison.Ordinal) && trimmed.Length > 0)
+			        (_lastSentCommand.StartsWith(trimmed,
+			            StringComparison.Ordinal) && trimmed.Length > 0))
 			    {
 			        if (string.Equals(line, _lastSentCommand,
 			                StringComparison.Ordinal) ||
 			            string.Equals(trimmed, _lastSentCommand,
 			                StringComparison.Ordinal))
+			        {
 			            _lastSentCommand = null;
+			        }
 			        return;
 			    }
 			}
 
+            // エコーバック抑制（前方一致）
             if (_lastSentCommand != null &&
                 line.Length > 0 &&
                 _lastSentCommand.StartsWith(line, StringComparison.Ordinal))
             {
-                return;
+				return;
             }
 
+            // ノイズ行抑制
             if (line == ">" || line == ">>" || line == ">> ")
-                return;
-
-			// プロンプト直後の余分な空行をスキップ
-			if (_skipEmptyLines > 0 && line.Length == 0)
 			{
-			    _skipEmptyLines--;
-			    return;
+				return;
 			}
-			if (line.Length > 0 && _promptReady)
-			    _skipEmptyLines = 0;
-
+			
 			if (line.Contains("PS ") && line.TrimEnd().EndsWith(">"))
 			{
 			    Console.Write(line.TrimEnd() + " ");
 			    if (!_promptReady)
 			        _promptReady = true;
 			    PowerShellHost.PromptWritten = true;
-			    _skipEmptyLines = 1;
 			    return;
 			}
-
-            Console.WriteLine(line);
+			Console.WriteLine(line); // ← これが抜けていた
         }
 
         private static void OutputRemaining(string remaining)
         {
+            // エコーバック抑制（完全一致）
             if (_lastSentCommand != null &&
                 (string.Equals(remaining, _lastSentCommand,
                      StringComparison.Ordinal) ||
@@ -330,6 +345,7 @@ namespace PowerShellController
                 return;
             }
 
+            // エコーバック抑制（前方一致）
             if (_lastSentCommand != null &&
                 remaining.Length > 0 &&
                 _lastSentCommand.StartsWith(remaining, StringComparison.Ordinal))
@@ -337,25 +353,25 @@ namespace PowerShellController
                 return;
             }
 
+            // ノイズ行抑制
             if (remaining == ">" || remaining == ">>" || remaining == ">> ")
                 return;
-                
+
 			if (remaining.Contains("PS ") && remaining.TrimEnd().EndsWith(">"))
 			{
 			    Console.Write(remaining.TrimEnd() + " ");
 			    PowerShellHost.PromptWritten = true;
-			    _skipEmptyLines = 1;
 			}
-			else
-			{
-			    Console.Write(remaining);
-			}
+            else
+            {
+                Console.Write(remaining);
+            }
         }
         
-		public static int SkipEmptyLines
+        public static void ClearLastSentCommand()
 		{
-		    get { return _skipEmptyLines; }
-		    set { _skipEmptyLines = value; }
-		}        
+		    _lastSentCommand = null;
+		}
+        
     }
 }

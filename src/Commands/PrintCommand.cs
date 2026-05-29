@@ -41,10 +41,14 @@ namespace PowerShellController
                 
             }
 
-            if (map.TryGetValue(colorName, out color))
-                PowerShellHost.WriteLineColored(message, color);
-            else
-                Console.WriteLine(ctx.Expand(arg));
+			if (map.TryGetValue(colorName, out color))
+			{
+			    PowerShellHost.WriteLineColored(message, color);
+			}
+			else
+			{
+			    Console.WriteLine(ctx.Expand(arg));
+			}
         }
     }
 }
