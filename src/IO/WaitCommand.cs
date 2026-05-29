@@ -14,8 +14,7 @@ namespace PowerShellController
             if (string.IsNullOrEmpty(arg)) return;
             PowerShellHost.BeginWait(arg);
             PowerShellHost.WaitUntilMatched();
-            // PTY出力スレッドの表示が完了するまで待つ
-            Thread.Sleep(100);
+            Thread.Sleep(300);
             PowerShellHost.PromptWritten = true;
         }
     }

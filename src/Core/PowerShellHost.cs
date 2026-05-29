@@ -14,7 +14,7 @@ namespace PowerShellController
         internal static bool WaitActive = false;
 
         public static Action<string> SendToPowerShell { get; set; }
-
+		
         // プロンプトが出力済みかどうか
         public static bool PromptWritten = false;
 

@@ -133,19 +133,19 @@ namespace PowerShellController
                 Console.ResetColor();
             }
 
-            // プロンプトが来るまで最大1秒待つ
-            int waited = 0;
-            while (!PowerShellHost.PromptWritten && waited < 1000)
-            {
-                Thread.Sleep(50);
-                waited += 50;
-            }
-
-            // マクロ終了後は常に空コマンドでプロンプトを出す
-            PowerShellHost.PromptWritten = false;
-            PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
-            PowerShellHost.SendToPowerShell("");
-            PowerShellHost.WaitUntilMatched(3000);
+			// プロンプトが来るまで最大1秒待つ
+			int waited = 0;
+			while (!PowerShellHost.PromptWritten && waited < 1000)
+			{
+			    Thread.Sleep(50);
+			    waited += 50;
+			}
+			// マクロ終了後は常に空コマンドでプロンプトを出す
+			PowerShellHost.PromptWritten = false;
+			PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
+			Thread.Sleep(200); // print等の直接出力が完了するまで待つ
+			PowerShellHost.SendToPowerShell("");
+			PowerShellHost.WaitUntilMatched(3000);
         }
     }
 }

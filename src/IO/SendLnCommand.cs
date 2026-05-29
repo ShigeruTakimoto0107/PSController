@@ -18,6 +18,7 @@ namespace PowerShellController
 		            "[ERROR] sendln: プロンプト未確認です。事前に wait > を実行してください。");
 		    string expanded = ctx.Expand(arg);
 		    PowerShellHost.PromptWritten = false;
+		    ConPtyProcess.SkipEmptyLines = 3; // ← 追加
 		    Console.WriteLine(); // sendln後に改行
 		    PowerShellHost.SendToPowerShell(expanded);
 		}

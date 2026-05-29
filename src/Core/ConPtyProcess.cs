@@ -118,8 +118,8 @@ namespace PowerShellController
 
         private static string _lastSentCommand = null;
         private static bool   _promptReady     = false;
-        private static bool   _afterPrompt     = false;
-
+		internal static int _skipEmptyLines = 0;
+		
         public static void Start()
         {
             const int STD_OUTPUT_HANDLE = -11;
@@ -296,23 +296,24 @@ namespace PowerShellController
             if (line == ">" || line == ">>" || line == ">> ")
                 return;
 
-			// 変更後
+			// プロンプト直後の余分な空行をスキップ
+			if (_skipEmptyLines > 0 && line.Length == 0)
+			{
+			    _skipEmptyLines--;
+			    return;
+			}
+			if (line.Length > 0 && _promptReady)
+			    _skipEmptyLines = 0;
+
 			if (line.Contains("PS ") && line.TrimEnd().EndsWith(">"))
 			{
 			    Console.Write(line.TrimEnd() + " ");
 			    if (!_promptReady)
 			        _promptReady = true;
-			    _afterPrompt = true;
 			    PowerShellHost.PromptWritten = true;
+			    _skipEmptyLines = 1;
 			    return;
 			}
-
-            if (_afterPrompt)
-            {
-                if (line.Length == 0)
-                    return;
-                _afterPrompt = false;
-            }
 
             Console.WriteLine(line);
         }
@@ -338,18 +339,23 @@ namespace PowerShellController
 
             if (remaining == ">" || remaining == ">>" || remaining == ">> ")
                 return;
-
-			// 変更後
+                
 			if (remaining.Contains("PS ") && remaining.TrimEnd().EndsWith(">"))
 			{
 			    Console.Write(remaining.TrimEnd() + " ");
-			    _afterPrompt = true;
 			    PowerShellHost.PromptWritten = true;
+			    _skipEmptyLines = 1;
 			}
-            else
-            {
-                Console.Write(remaining);
-            }
+			else
+			{
+			    Console.Write(remaining);
+			}
         }
+        
+		public static int SkipEmptyLines
+		{
+		    get { return _skipEmptyLines; }
+		    set { _skipEmptyLines = value; }
+		}        
     }
 }
