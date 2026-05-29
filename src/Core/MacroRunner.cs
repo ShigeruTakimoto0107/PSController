@@ -126,7 +126,7 @@ namespace PowerShellController
             {
                 // 非同期出力が来るまで少し待つ
                 System.Threading.Thread.Sleep(300);
-                Console.WriteLine();
+                Console.WriteLine("");
                 Console.ForegroundColor = ConsoleColor.Red;
                 string location = currentLine != null ? " " + currentLine.Location : "";
                 Console.WriteLine(ex.Message + location);
@@ -143,9 +143,9 @@ namespace PowerShellController
 			// マクロ終了後は常に空コマンドでプロンプトを出す
 			PowerShellHost.PromptWritten = false;
 			PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
-			Thread.Sleep(200); // print等の直接出力が完了するまで待つ
+			Thread.Sleep(200);
 			PowerShellHost.SendToPowerShell("");
-			PowerShellHost.WaitUntilMatched(3000);
+			bool matched = PowerShellHost.WaitUntilMatched(3000);
         }
     }
 }

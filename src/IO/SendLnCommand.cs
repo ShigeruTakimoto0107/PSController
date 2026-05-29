@@ -12,13 +12,26 @@ namespace PowerShellController
 
 		public void Execute(string arg, ExecutionContext ctx)
 		{
-		    if (string.IsNullOrEmpty(arg)) arg = "";
-		    if (!PowerShellHost.PromptWritten)
-		        throw new MacroAbortException(
-		            "[ERROR] sendln: プロンプト未確認です。事前に wait > を実行してください。");
+		    //---------------------------------------------
+		    //引数がない場合はエラー判定せず、コンソールにNULLを送る
+		    //ある場合はプロンプトの有無を判定する
+		    //---------------------------------------------
+		    if (string.IsNullOrEmpty(arg)) 
+		    {
+		    	arg = "";
+		    }
+		    else
+		    {
+			    if (!PowerShellHost.PromptWritten)
+			        throw new MacroAbortException(
+			            "[ERROR] sendln: プロンプト未確認です。事前に wait > を実行してください。");
+			}
 		    string expanded = ctx.Expand(arg);
 		    PowerShellHost.PromptWritten = false;
-		    Console.WriteLine(); // sendln後に改行
+		    //抑止されるので追加
+		    Console.WriteLine(expanded);
+		    
+		    //Console.WriteLine(); // sendln後に改行
 		    PowerShellHost.SendToPowerShell(expanded);
 		}
     }

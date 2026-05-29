@@ -142,8 +142,8 @@ namespace PowerShellController
                 throw new InvalidOperationException(
                     "CreatePipe(Out) 失敗: " + Marshal.GetLastWin32Error());
 
-            var size = new COORD { X = 120, Y = 30 };
-//            var size = new COORD { X =300, Y = 200 };
+//            var size = new COORD { X = 120, Y = 30 };
+            var size = new COORD { X =120, Y = 10 };
 //            var size = new COORD { X = 9999, Y = 9999 };
             int hr = CreatePseudoConsole(
                 size, hPipeInRead, hPipeOutWrite, 0, out _hPC);
@@ -186,8 +186,10 @@ namespace PowerShellController
 			{
 			    if (!string.IsNullOrEmpty(cmd))
 			        _lastSentCommand = cmd;
+//			    byte[] bytes =
+//			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r\n");
 			    byte[] bytes =
-			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r\n");
+			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r");
 			    uint written;
 			    WriteFile(_hInput, bytes, (uint)bytes.Length,
 			        out written, IntPtr.Zero);
@@ -208,6 +210,7 @@ namespace PowerShellController
                 uint bytesRead;
                 bool ok = ReadFile(_hOutput, buf, (uint)buf.Length,
                     out bytesRead, IntPtr.Zero);
+                    
                 /*
 				// デバッグ：HEXダンプ
 				var hex = new System.Text.StringBuilder();
@@ -228,6 +231,8 @@ namespace PowerShellController
                 string raw = System.Text.Encoding.UTF8.GetString(
                     buf, 0, (int)bytesRead);
                 string text = VTStripper.Strip(raw);
+                //text = text.Replace("\r\n", "\n").Replace("\r", "\n");
+                //text = text.Replace("\r\n", "\n").Replace("\r", "");
                 text = text.Replace("\r", "");
 
                 if (isFirst && text.Length > 0)
@@ -284,11 +289,21 @@ namespace PowerShellController
 
         private static void OutputLine(string line)
         {
+            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "]");
+
+			// 抑止したい条件（空行など）であればここで return する
+			if (PowerShellHost.SuppressNextOutput && line.Length == 0)
+    		{
+	            PowerShellHost.SuppressNextOutput = false; // 抑止したなら解除
+	            return; 
+	        }
+            
             // エコーバック抑制（完全一致）
-			// 変更後
+            
 			if (_lastSentCommand != null)
 			{
 			    string trimmed = line.TrimStart('>', ' ');
+			    
 			    if (string.Equals(line, _lastSentCommand,
 			            StringComparison.Ordinal) ||
 			        string.Equals(trimmed, _lastSentCommand,
@@ -314,12 +329,13 @@ namespace PowerShellController
             {
 				return;
             }
-
+            
             // ノイズ行抑制
             if (line == ">" || line == ">>" || line == ">> ")
 			{
 				return;
 			}
+
 			
 			if (line.Contains("PS ") && line.TrimEnd().EndsWith(">"))
 			{

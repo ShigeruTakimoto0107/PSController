@@ -15,7 +15,6 @@ namespace PowerShellController
             PowerShellHost.BeginWait(arg);
             PowerShellHost.WaitUntilMatched();
             Thread.Sleep(300);
-            PowerShellHost.PromptWritten = true;
         }
     }
 }

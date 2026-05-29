@@ -19,6 +19,11 @@ namespace PowerShellController
             var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0) return;
 
+			// ---------------------------------------
+			// Printコマンドは表示後の空行を抑止する
+			// ---------------------------------------
+			PowerShellHost.SuppressNextOutput = true; 
+
             string colorName = parts[0].ToLower();
             string message = (parts.Length >= 2) ? parts[1] : "";
             message = ctx.Expand(message);
@@ -35,10 +40,13 @@ namespace PowerShellController
                 { "white",   ConsoleColor.White }
             };
 
+            //------------------------------------------
+            //プロンプトのすぐ後なら改行してから表示する
+            //------------------------------------------
             if (PowerShellHost.PromptWritten)
             {
+            	PowerShellHost.PromptWritten = false;
                 Console.WriteLine();
-                
             }
 
 			if (map.TryGetValue(colorName, out color))
