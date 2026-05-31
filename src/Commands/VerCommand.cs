@@ -13,24 +13,25 @@ namespace PowerShellController
 
 		public void Execute(string arg, ExecutionContext ctx)
 		{
-
-
 		    string line =
 		        VersionInfo.ProgramName + " " +
 		        VersionInfo.Version + " (" +
 		        VersionInfo.BuildDate + ", " +
 		        VersionInfo.GitVersion + ")";
-
+            //------------------------------------------
+            //プロンプトのすぐ後なら改行してから表示する
+            //------------------------------------------
 		    if (PowerShellHost.PromptWritten)
 		    {
-		        Console.WriteLine("");
+		        PowerShellHost.PromptWritten = false;
+		        Console.WriteLine();
 		    }
+		    PowerShellHost.WriteLineColored(line, ConsoleColor.Green);
 		    // ---------------------------------------
 			// Varコマンドは表示後の空行を抑止する
 			// ---------------------------------------
 			PowerShellHost.SuppressNextOutput = true; 
-		    PowerShellHost.WriteLineColored(line, ConsoleColor.Green);
-		    PowerShellHost.PromptWritten = false;
+
 		}
     }
 }

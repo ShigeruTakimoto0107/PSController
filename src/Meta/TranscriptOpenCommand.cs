@@ -12,11 +12,14 @@ namespace PowerShellController
 
 		public void Execute(string arg, ExecutionContext ctx)
 		{
-		    if (string.IsNullOrEmpty(arg)) return;
+		    if (string.IsNullOrEmpty(arg))
+			{
+			    throw new MacroAbortException("[ERROR] .logopen: ファイルパスを指定してください。");
+			}
 		    string expanded = ctx.Expand(arg.Trim());
 		    if (PowerShellHost.PromptWritten)
 		    {
-		        PowerShellHost.PromptWritten = false;
+		        PowerShellHost.PromptWritten = false; //Prompt消費
 		        Console.WriteLine();
 		    }
 		    PowerShellHost.SendToPowerShell("Start-Transcript -Path \"" + expanded + "\"");

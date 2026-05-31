@@ -24,15 +24,16 @@ namespace PowerShellController
 		    {
 			    if (!PowerShellHost.PromptWritten)
 			        throw new MacroAbortException(
-			            "[ERROR] sendln: プロンプト未確認です。事前に wait > を実行してください。");
+			            "[ERROR] sendln: プロンプト未確認です。事前に wait系コマンド を実行してください。");
 			}
 		    string expanded = ctx.Expand(arg);
-		    PowerShellHost.PromptWritten = false;
+
+		    PowerShellHost.SendToPowerShell(expanded);
+
 		    //抑止されるので追加
 		    Console.WriteLine(expanded);
-		    
-		    //Console.WriteLine(); // sendln後に改行
-		    PowerShellHost.SendToPowerShell(expanded);
+		    PowerShellHost.PromptWritten = false; //プロンプト消費
+
 		}
     }
 }

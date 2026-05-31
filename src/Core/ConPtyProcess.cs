@@ -287,6 +287,10 @@ namespace PowerShellController
             }
         }
 
+		//------------------------------------------
+		// \n で終わる完結した行を処理する
+		//------------------------------------------
+		
         private static void OutputLine(string line)
         {
             //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] last=[" + (_lastSentCommand ?? "null") + "]");
@@ -326,20 +330,29 @@ namespace PowerShellController
 				return;
 			}
 
-			
 			if (line.Contains("PS ") && line.TrimEnd().EndsWith(">"))
 			{
+			    if (Console.CursorLeft > 0)
+			        return;
 			    Console.Write(line.TrimEnd() + " ");
 			    if (!_promptReady)
 			        _promptReady = true;
 			    PowerShellHost.PromptWritten = true;
 			    return;
 			}
+			
 			Console.WriteLine(line); // ← これが抜けていた
         }
 
+
+		//----------------------------------------------------------------
+		// \n で終わっていない行末の断片（プロンプトなど）を処理する
+		//----------------------------------------------------------------
+
         private static void OutputRemaining(string remaining)
         {
+	        //Console.WriteLine("[DBG-REM] PromptWritten=" + PowerShellHost.PromptWritten + " [" + remaining + "]");
+	        
             // エコーバック抑制（完全一致）
             if (_lastSentCommand != null &&
                 (string.Equals(remaining, _lastSentCommand,
@@ -365,11 +378,14 @@ namespace PowerShellController
 
 			if (remaining.Contains("PS ") && remaining.TrimEnd().EndsWith(">"))
 			{
+			    if (Console.CursorLeft > 0)
+			        return;
+			        
 			    Console.Write(remaining.TrimEnd() + " ");
 			    PowerShellHost.PromptWritten = true;
+			    //Console.WriteLine("[DBG-SET] PromptWritten=" + PowerShellHost.PromptWritten );
 			    if (!_promptReady)
 			        _promptReady = true;
-			    // ★ここでSet
 			    if (!PowerShellHost.WaitActive)
 			        PowerShellHost.WaitEvent.Set();
 			}
