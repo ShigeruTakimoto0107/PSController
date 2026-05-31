@@ -1,21 +1,21 @@
+using System;
 using System.Text;
 namespace PowerShellController
 {
     public static class VTStripper
     {
+        private static int _currentRow = 0;
+
         public static string Strip(string input)
         {
             var sb = new StringBuilder(input.Length);
             int i = 0;
-            int currentRow = 0; // チャンク内での行追跡
-
             while (i < input.Length)
             {
                 if (input[i] == '\x1B')
                 {
                     i++;
                     if (i >= input.Length) break;
-
                     if (input[i] == '[')
                     {
                         i++;
@@ -31,6 +31,7 @@ namespace PowerShellController
                         {
                             char cmd = input[i];
                             i++;
+                            //if (!ignorePositioning && (cmd == 'H' || cmd == 'f'))
                             if (cmd == 'H' || cmd == 'f')
                             {
                                 string p = param.ToString();
@@ -42,16 +43,17 @@ namespace PowerShellController
                                     if (int.TryParse(rowPart, out parsed) && parsed > 0)
                                         targetRow = parsed;
                                 }
-                                // 前回より大きい行番号への移動は\nを1個出力
-                                if (targetRow > currentRow)
-                                    sb.Append('\n');
-                                currentRow = targetRow;
+                                if (targetRow > _currentRow)
+                                {
+                                    int lines = targetRow - _currentRow;
+                                    for (int n = 0; n < lines; n++)
+                                        sb.Append('\n');
+                                }
+                                _currentRow = targetRow;
                             }
-                            // その他のCSIは除去
                         }
                         continue;
                     }
-
                     if (input[i] == ']')
                     {
                         i++;
@@ -64,13 +66,11 @@ namespace PowerShellController
                         }
                         continue;
                     }
-
                     i++;
                     continue;
                 }
-
                 if (input[i] == '\n')
-                    currentRow++;
+                    _currentRow++;
                 sb.Append(input[i]);
                 i++;
             }

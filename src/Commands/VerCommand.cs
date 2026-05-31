@@ -13,6 +13,8 @@ namespace PowerShellController
 
 		public void Execute(string arg, ExecutionContext ctx)
 		{
+
+
 		    string line =
 		        VersionInfo.ProgramName + " " +
 		        VersionInfo.Version + " (" +
@@ -21,10 +23,14 @@ namespace PowerShellController
 
 		    if (PowerShellHost.PromptWritten)
 		    {
-		        Console.WriteLine();
+		        Console.WriteLine("");
 		    }
+		    // ---------------------------------------
+			// Varコマンドは表示後の空行を抑止する
+			// ---------------------------------------
+			PowerShellHost.SuppressNextOutput = true; 
 		    PowerShellHost.WriteLineColored(line, ConsoleColor.Green);
-		    // PromptWritten はそのまま触らない ← ★修正
+		    PowerShellHost.PromptWritten = false;
 		}
     }
 }

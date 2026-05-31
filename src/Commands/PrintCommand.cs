@@ -46,7 +46,7 @@ namespace PowerShellController
             if (PowerShellHost.PromptWritten)
             {
             	PowerShellHost.PromptWritten = false;
-                Console.WriteLine();
+                Console.WriteLine("");
             }
 
 			if (map.TryGetValue(colorName, out color))

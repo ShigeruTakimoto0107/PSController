@@ -17,11 +17,12 @@ print cyan === PSC 全コマンド確認自動テストを開始します ===
 ; --- setvar ---
 setvar NAME テスト太郎
 setvar FLAG ok
-
+setvar CURRENT_USER NULL
 ; --- print + 変数展開 ---
 print white 変数展開テスト: %NAME%
 
 ; --- sendln ---
+wait >
 sendln echo "sendlnの送信確認"
 wait >
 
@@ -33,8 +34,9 @@ print green pause完了
 ; --- setprompt ---
 setprompt >
 print white setprompt確認OK
-
+sendln
 ; --- waitto 正常系 ---
+wait >
 sendln echo "waitto_test_success"
 waitto 5 waitto_test_success
 if lastwait == ok
@@ -73,17 +75,19 @@ endif
 ; --- loop / endloop ---
 print cyan loopテスト開始 (3回ループ)
 setvar LOOP_COUNT 0
+sendln
 loop 3
-    sendln echo "ループ実行中"
     wait >
+    sendln echo "ループ実行中"
 endloop
 print green loop 3回完了（OK）
 
 ; --- loop / break ---
 print cyan loop+breakテスト開始 (10回指定、1回目で脱出)
+sendln
 loop 10
-    sendln echo "break実行前"
     wait >
+    sendln echo "break実行前"
     break
 endloop
 print green breakで脱出（OK）
@@ -124,13 +128,16 @@ endif
 
 ; --- getvar ---
 print cyan getvarテスト開始（環境変数からユーザー名を取得）
+wait >
 sendln $env:USERNAME
 getvar CURRENT_USER
 print green 取得されたユーザー名: %CURRENT_USER%
 
 ; --- echo off/on ---
 print cyan echo off/onテスト開始
+sendln
 echo off
+wait >
 sendln echo "このエコーバックは画面に非表示（ログのみ）"
 wait >
 echo on
@@ -170,5 +177,5 @@ print cyan === 全コマンド自動検証が完了しました ===
 print cyan === ３秒停止します ===
 pause 3
 ; --- exit 入れないと制御が戻らない ---
-exit
+;exit
 

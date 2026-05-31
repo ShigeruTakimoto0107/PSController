@@ -221,8 +221,8 @@ namespace PowerShellController
 				}
 				Console.WriteLine("=HEX=");
 				Console.WriteLine(hex.ToString());
-				Console.WriteLine("=END=");                    */
-                    
+				Console.WriteLine("=END=");                    
+                */
                     
                     
                     
@@ -251,7 +251,6 @@ namespace PowerShellController
                                 .Contains(PowerShellHost.WaitPattern))
                         {
                             PowerShellHost.WaitActive = false;
-                            PowerShellHost.WaitEvent.Set();
                             PowerShellHost.WaitBuffer.Length = 0;
                         }
                     }
@@ -271,6 +270,7 @@ namespace PowerShellController
                     }
                 }
 
+
 				if (lineBuf.Length > 0)
 				{
 				    string remaining = lineBuf.ToString();
@@ -289,10 +289,12 @@ namespace PowerShellController
 
         private static void OutputLine(string line)
         {
-            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "]");
+            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] last=[" + (_lastSentCommand ?? "null") + "]");
+			// C# 5.0 での記述
+			//Console.WriteLine(string.Format("[DEBUG] SuppressNextOutput: {0}, LineLength: {1}", PowerShellHost.SuppressNextOutput, line.Trim().Length));
 
 			// 抑止したい条件（空行など）であればここで return する
-			if (PowerShellHost.SuppressNextOutput && line.Length == 0)
+			if (PowerShellHost.SuppressNextOutput && line.Trim().Length == 0)
     		{
 	            PowerShellHost.SuppressNextOutput = false; // 抑止したなら解除
 	            return; 
@@ -302,22 +304,10 @@ namespace PowerShellController
             
 			if (_lastSentCommand != null)
 			{
-			    string trimmed = line.TrimStart('>', ' ');
-			    
-			    if (string.Equals(line, _lastSentCommand,
-			            StringComparison.Ordinal) ||
-			        string.Equals(trimmed, _lastSentCommand,
-			            StringComparison.Ordinal) ||
-			        (_lastSentCommand.StartsWith(trimmed,
-			            StringComparison.Ordinal) && trimmed.Length > 0))
+			    if (string.Equals(line, _lastSentCommand, StringComparison.Ordinal) ||
+			        line.EndsWith(_lastSentCommand, StringComparison.Ordinal))
 			    {
-			        if (string.Equals(line, _lastSentCommand,
-			                StringComparison.Ordinal) ||
-			            string.Equals(trimmed, _lastSentCommand,
-			                StringComparison.Ordinal))
-			        {
-			            _lastSentCommand = null;
-			        }
+			        _lastSentCommand = null;
 			        return;
 			    }
 			}
@@ -377,6 +367,11 @@ namespace PowerShellController
 			{
 			    Console.Write(remaining.TrimEnd() + " ");
 			    PowerShellHost.PromptWritten = true;
+			    if (!_promptReady)
+			        _promptReady = true;
+			    // ★ここでSet
+			    if (!PowerShellHost.WaitActive)
+			        PowerShellHost.WaitEvent.Set();
 			}
             else
             {
