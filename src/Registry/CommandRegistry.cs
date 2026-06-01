@@ -49,17 +49,17 @@ namespace PowerShellController
 		    }
 			else
 			{
-			    // Unknown: 未登録コマンドはそのまま PowerShell に送信
 			    if (!PowerShellHost.PromptWritten)
 			        throw new MacroAbortException(
-			            "[ERROR] 未登録コマンド '" + cmd + "': プロンプト未確認です。事前に wait > を実行してください。");
+			            "[ERROR] 未登録コマンド '" + cmd + "': プロンプト未確認です。事前に wait系コマンド を実行してください。");
 			    string expanded = ctx.Expand(line);
 			    if (!PowerShellHost.EchoBack)
 			        PowerShellHost.LastSentCommand = expanded;
 			    else
 			        PowerShellHost.LastSentCommand = null;
-			    PowerShellHost.PromptWritten = false;
 			    PowerShellHost.SendToPowerShell(expanded);
+			    Console.WriteLine(expanded);
+			    PowerShellHost.PromptWritten = false;
 			}
 		}
     }

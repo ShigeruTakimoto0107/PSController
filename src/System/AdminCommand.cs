@@ -18,6 +18,8 @@ namespace PowerShellController
             if (isElevated)
             {
                 // すでに昇格済み
+                //プロンプトの呼び込み
+                PowerShellHost.SendToPowerShell("");
                 return;
             }
             // 管理者権限で自分自身を再起動

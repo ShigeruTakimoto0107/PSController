@@ -9,7 +9,7 @@ print cyan [INFO] サービス監視ログの記録を開始します...
 .logopen ../logs/Service_Monitor.log
 
 ; 【対策】Transcript開始メッセージなどの余計な出力をここで一旦やり過ごす
-wait >
+
 
 print cyan --------------------------------------------------
 print cyan [INFO] Windows サービス死活監視 (Print Spooler)
@@ -17,7 +17,7 @@ print cyan --------------------------------------------------
 
 ; 変数領域をあらかじめ確保（初期化）
 setvar SERVICE_STATUS ""
-
+wait >
 ; 状態確認用のPowerShellコマンド
 (Get-Service -Name Spooler).Status
 
@@ -32,7 +32,7 @@ endif
 
 if "%SERVICE_STATUS%" == "Stopped"
     print red [ALERT] Print Spooler サービスが停止しています！復旧処理を開始します...
-    
+    wait >
     ; サービス起動コマンドを送信
     Start-Service -Name Spooler
     wait >
@@ -44,7 +44,7 @@ if "%SERVICE_STATUS%" == "Stopped"
     
     ; 復旧確認用の変数領域をあらかじめ確保
     setvar NEW_STATUS ""
-    
+    wait >
     ; ステータス再取得コマンド
     (Get-Service -Name Spooler).Status
     

@@ -341,7 +341,14 @@ namespace PowerShellController
 			    return;
 			}
 			
-			Console.WriteLine(line); // ← これが抜けていた
+			if (PowerShellHost.CaptureMode)
+			{
+			    PowerShellHost.CapturedLine = line;
+			    PowerShellHost.CaptureMode = false;
+			    return;
+			}
+
+			Console.WriteLine(line);			
         }
 
 

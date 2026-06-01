@@ -1,4 +1,6 @@
 wait >
 ; 1. メディアトレイを自動でCLOSE
-print cyan メディアトレイを自動でCLOSE...
+
 sendln ../macros/ps1/Automatically_close_the_media_tray.ps1
+
+print cyan メディアトレイを自動でCLOSE...

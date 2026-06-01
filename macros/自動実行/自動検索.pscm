@@ -1,32 +1,24 @@
 echo on
 wait >
-print cyan ゾンビプロセス削除...
-Killps
-print cyan Edge起動中...
-sendln
-wait >
 sendln ../macros/ps1/Burauza_Debug_Open.ps1
-wait >
+print cyan Edge起動中...
 setvar URL https://www.google.com/
+wait >
+sendln ../macros/ps1/Burauza_Navigate.ps1 %URL%
 print cyan Google通常検索にナビゲート...
-sendln
 wait >
-../macros/ps1/Burauza_Navigate.ps1 %URL%
-wait >
+
+sendln ../macros/ps1/Burauza_Google_Search.ps1 "横浜 ラーメン"
 print cyan 横浜 ラーメンで検索...
-sendln
-wait >
-../macros/ps1/Burauza_Google_Search.ps1 "横浜 ラーメン"
-wait >
-print cyan 最初の１件のURLをパワーシェルに表示...
-sendln
+
 wait >
 ../macros/ps1/Burauza_URL_Return.ps1
 getvar URL
-print cyan 取得したURLにナビゲート...
+print green %URL%
 sendln
 wait >
-../macros/ps1/Burauza_Navigate.ps1 %URL%
+sendln ../macros/ps1/Burauza_Navigate.ps1 %URL%
+print cyan 取得したURLにナビゲート...
 wait >
 pause
 exit

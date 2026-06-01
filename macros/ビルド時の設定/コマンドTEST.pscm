@@ -17,7 +17,7 @@ print cyan === PSC 全コマンド確認自動テストを開始します ===
 ; --- setvar ---
 setvar NAME テスト太郎
 setvar FLAG ok
-setvar CURRENT_USER NULL
+
 ; --- print + 変数展開 ---
 print white 変数展開テスト: %NAME%
 

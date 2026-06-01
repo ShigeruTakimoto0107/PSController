@@ -1,4 +1,6 @@
 wait >
 ; 1. 権限表示
-print cyan 権限表示中...
+
 sendln ../macros/ps1/Permissions_Display.ps1
+
+print cyan 権限表示中...

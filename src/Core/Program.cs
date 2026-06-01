@@ -10,6 +10,13 @@ namespace PowerShellController
         {
             // マクロファイル読み込み
             List<MacroLine> lines = null;
+            
+            // 実行ファイルのあるディレクトリをカレントディレクトリに設定
+			string exeDir = Path.GetDirectoryName(
+			    System.Reflection.Assembly.GetExecutingAssembly().Location);
+			if (!string.IsNullOrEmpty(exeDir))
+			    Environment.CurrentDirectory = exeDir;
+            
             if (args.Length >= 1)
             {
                 string filePath = args[0];
@@ -44,6 +51,9 @@ namespace PowerShellController
 				    return 1;
 				}            
 			}
+			
+			
+			
             // PowerShell プロセス起動・出力監視開始
             //PowerShellProcess.Start();
             ConPtyProcess.Start();
