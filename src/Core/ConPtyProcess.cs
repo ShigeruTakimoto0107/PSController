@@ -252,6 +252,7 @@ namespace PowerShellController
                         {
                             PowerShellHost.WaitActive = false;
                             PowerShellHost.WaitBuffer.Length = 0;
+                            PowerShellHost.WaitEvent.Set();
                         }
                     }
                 }
@@ -274,8 +275,7 @@ namespace PowerShellController
 				if (lineBuf.Length > 0)
 				{
 				    string remaining = lineBuf.ToString();
-				    bool isPrompt = remaining.Contains("PS ") &&
-				                    remaining.TrimEnd().EndsWith(">");
+				    bool isPrompt = PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd());
 				    if (isPrompt)
 				    {
 				        OutputRemaining(remaining);
@@ -330,7 +330,7 @@ namespace PowerShellController
 				return;
 			}
 
-			if (line.Contains("PS ") && line.TrimEnd().EndsWith(">"))
+			if (PowerShellHost.PromptRegex.IsMatch(line.TrimEnd()))
 			{
 			    if (Console.CursorLeft > 0)
 			        return;
@@ -383,7 +383,7 @@ namespace PowerShellController
             if (remaining == ">" || remaining == ">>" || remaining == ">> ")
                 return;
 
-			if (remaining.Contains("PS ") && remaining.TrimEnd().EndsWith(">"))
+			if (PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd()))
 			{
 			    if (Console.CursorLeft > 0)
 			        return;

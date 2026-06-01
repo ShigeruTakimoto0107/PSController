@@ -1,5 +1,5 @@
 using System;
-
+using System.Threading;
 namespace PowerShellController
 {
     public class WaitToCommand : ICommand
@@ -27,7 +27,8 @@ namespace PowerShellController
 
             PowerShellHost.BeginWait(pattern);
             bool ok = PowerShellHost.WaitUntilMatched(timeoutMs);
-            PowerShellHost.PromptWritten = true;
+            //PowerShellHost.PromptWritten = true;
+            Thread.Sleep(300);
             ctx.LastWaitResult = ok;
         }
     }

@@ -12,7 +12,7 @@ namespace PowerShellController
         public void Execute(string arg, ExecutionContext ctx)
         {
             if (string.IsNullOrEmpty(arg)) return;
-            PowerShellHost.PromptPattern = arg.Trim();
+            PowerShellHost.SetPromptPattern(arg.Trim());
         }
     }
 }

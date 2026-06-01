@@ -4,6 +4,6 @@ namespace PowerShellController {
           public const string Version     = "0.0.1";
           public const string Copyright   = "(C) 2026 Kolog898";
           public const string BuildDate   = "2026-06-01";
-          public const string GitVersion  = "1498ba8";
+          public const string GitVersion  = "6e055ad";
       }
 }

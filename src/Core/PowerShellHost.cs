@@ -25,6 +25,14 @@ namespace PowerShellController
 
         // プロンプトパターン（デフォルトは >）
         public static string PromptPattern = ">";
+        public static System.Text.RegularExpressions.Regex PromptRegex
+            = new System.Text.RegularExpressions.Regex(@"^PS .+>\s*$");
+
+        public static void SetPromptPattern(string pattern)
+        {
+            PromptPattern = pattern;
+            PromptRegex = new System.Text.RegularExpressions.Regex(pattern);
+        }
 
         // キャプチャモード
         public static bool CaptureMode = false;
