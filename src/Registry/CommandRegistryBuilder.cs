@@ -21,6 +21,8 @@ namespace PowerShellController
             new LoopCommand().Register(registry);
             new EndLoopCommand().Register(registry);
             new BreakCommand().Register(registry);
+            new WhileCommand().Register(registry);
+            new EndWhileCommand().Register(registry);
             new TranscriptOpenCommand().Register(registry);
             new TranscriptCloseCommand().Register(registry);
             new GotoCommand().Register(registry);

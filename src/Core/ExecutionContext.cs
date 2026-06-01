@@ -72,7 +72,11 @@ namespace PowerShellController
         public int LoopStartIndex { get; set; }
         public bool BreakRequested { get; set; }
         public bool LoopBackRequested { get; set; }
-
+       // while制御
+        public int WhileStartIndex { get; set; }
+        public bool WhileBackRequested { get; set; }
+        public bool WhileSkipRequested { get; set; }
+        
         // マクロファイルパス
         public string MacroFilePath { get; set; }
 

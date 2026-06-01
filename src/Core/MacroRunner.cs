@@ -32,21 +32,33 @@ namespace PowerShellController
                     {
                         ctx.LoopStartIndex = i;
                     }
+                    // while コマンドでループ先頭インデックスを記録
+                    if (trimmed.StartsWith("while", StringComparison.OrdinalIgnoreCase) &&
+                        !trimmed.StartsWith("endwhile", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ctx.WhileStartIndex = i;
+                    }
 
                     registry.Execute(lines[i].Text, ctx);
-
-                    // BreakRequested 中は endloop まで読み飛ばす
+                    
+                    
+                    // BreakRequested 中は endloop/endwhile まで読み飛ばす
+                    
                     if (ctx.BreakRequested)
                     {
-                        while (i < lines.Count &&
-                            !lines[i].Text.Trim().StartsWith("endloop",
-                                StringComparison.OrdinalIgnoreCase))
+                        while (i < lines.Count)
                         {
+                            string t = lines[i].Text.Trim();
+                            if (t.StartsWith("endloop", StringComparison.OrdinalIgnoreCase) ||
+                                t.StartsWith("endwhile", StringComparison.OrdinalIgnoreCase))
+                                break;
                             i++;
                         }
-                        // endloop を実行して BreakRequested をリセット
                         if (i < lines.Count)
                             registry.Execute(lines[i].Text, ctx);
+                        ctx.BreakRequested = false;
+                        ctx.WhileBackRequested = false;
+                        ctx.LoopBackRequested = false;
                         continue;
                     }
 
@@ -55,6 +67,33 @@ namespace PowerShellController
                     {
                         i = ctx.LoopStartIndex - 1;
                         ctx.LoopBackRequested = false;
+                    }
+
+                    // endloop でループ先頭に戻る
+                    if (ctx.LoopBackRequested)
+                    {
+                        i = ctx.LoopStartIndex - 1;
+                        ctx.LoopBackRequested = false;
+                    }
+                    
+                    // while条件偽 → endwhile まで読み飛ばす
+                    if (ctx.WhileSkipRequested)
+                    {
+                        while (i < lines.Count &&
+                            !lines[i].Text.Trim().StartsWith("endwhile",
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            i++;
+                        }
+                        ctx.WhileSkipRequested = false;
+                        continue;
+                    }
+                    
+                    // endwhile でループ先頭に戻る
+                    if (ctx.WhileBackRequested)
+                    {
+                        i = ctx.WhileStartIndex - 1;
+                        ctx.WhileBackRequested = false;
                     }
 
                     // goto ジャンプ処理
