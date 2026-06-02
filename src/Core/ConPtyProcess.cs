@@ -264,6 +264,14 @@ namespace PowerShellController
                         string line = lineBuf.ToString();
                         lineBuf.Length = 0;
                         OutputLine(line);
+                        
+                        //「行が確定した瞬間」を検知して getvar に渡す。
+						if (PowerShellHost.GetVarActive)
+						{
+						    PowerShellHost.GetVarLastLine = line;
+						    PowerShellHost.GetVarLastReceive = DateTime.Now;
+						}
+                        
                     }
                     else
                     {

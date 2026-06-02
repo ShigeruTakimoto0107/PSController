@@ -81,5 +81,14 @@ namespace PowerShellController
             Console.WriteLine(text);
             Console.ForegroundColor = old;
         }
+        
+        
+        //------------------------------
+		// getvar 用フィールド（行バッファ方式）
+		//------------------------------
+		public static bool GetVarActive = false;
+		public static string GetVarLastLine = "";
+		public static DateTime GetVarLastReceive;
+
     }
 }
