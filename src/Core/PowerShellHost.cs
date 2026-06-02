@@ -15,6 +15,9 @@ namespace PowerShellController
 
         public static Action<string> SendToPowerShell { get; set; }
 
+		// マクロ実行中かどうかのフラグ
+		public static bool MacroRunning = false;
+
 		//------------------------------
 		//空行の抑止フラグ
 		//------------------------------
@@ -38,9 +41,9 @@ namespace PowerShellController
         public static bool CaptureMode = false;
         public static string CapturedLine = "";
 
-        // エコーバック制御（デフォルトは on）
-        public static bool EchoBack = true;
-
+        // Printエコーバック制御（デフォルトは on）
+        public static bool MacroEcho = true;
+        
         // sendln が送信した最後のコマンド（エコーバック抑制用）
         public static string LastSentCommand = null;
 

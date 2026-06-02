@@ -101,15 +101,15 @@ namespace PowerShellController
 							buffer = "";
 							continue;
 						}
-						if (!PowerShellHost.EchoBack &&
-							PowerShellHost.LastSentCommand != null &&
-							string.Equals(line, PowerShellHost.LastSentCommand,
-								StringComparison.Ordinal))
-						{
+					//	if (!PowerShellHost.EchoBack &&
+					//		PowerShellHost.LastSentCommand != null &&
+					//		string.Equals(line, PowerShellHost.LastSentCommand,
+					//			StringComparison.Ordinal))
+					//	{
 							PowerShellHost.LastSentCommand = null;
 							buffer = "";
-							continue;
-						}
+					//		continue;
+					//	}
 						if (lastUserInput != null &&
 							string.Equals(line, lastUserInput, StringComparison.Ordinal))
 						{

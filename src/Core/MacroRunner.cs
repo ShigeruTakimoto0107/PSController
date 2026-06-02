@@ -11,6 +11,7 @@ namespace PowerShellController
 
         public static void Run(List<MacroLine> lines, CommandRegistry registry, ExecutionContext ctx)
         {
+            PowerShellHost.MacroRunning = true;
             try
             {
                 for (int i = 0; i < lines.Count; i++)
@@ -179,12 +180,19 @@ namespace PowerShellController
 			    Thread.Sleep(50);
 			    waited += 50;
 			}
+			
+			PowerShellHost.MacroRunning = false;
+			
 			// マクロ終了後は常に空コマンドでプロンプトを出す
-			PowerShellHost.PromptWritten = false;
-			PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
-			Thread.Sleep(200);
-			PowerShellHost.SendToPowerShell("");
-			bool matched = PowerShellHost.WaitUntilMatched(3000);
+			if (!PowerShellHost.PromptWritten)
+			{
+			    PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
+			    Thread.Sleep(200);
+			    PowerShellHost.SendToPowerShell("");
+			    PowerShellHost.WaitUntilMatched(3000);
+			}
+			
+			
         }
     }
 }

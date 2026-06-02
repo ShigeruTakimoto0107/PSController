@@ -50,13 +50,13 @@ namespace PowerShellController
 			else
 			{
 			    if (!PowerShellHost.PromptWritten)
-			        throw new MacroAbortException(
-			            "[ERROR] 未登録コマンド '" + cmd + "': プロンプト未確認です。事前に wait系コマンド を実行してください。");
+			    {
+			        PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
+			        PowerShellHost.SendToPowerShell("");
+			        PowerShellHost.WaitUntilMatched(3000);
+			    }
 			    string expanded = ctx.Expand(line);
-			    if (!PowerShellHost.EchoBack)
-			        PowerShellHost.LastSentCommand = expanded;
-			    else
-			        PowerShellHost.LastSentCommand = null;
+			    ConPtyProcess.SetLastSentCommand(expanded);
 			    PowerShellHost.SendToPowerShell(expanded);
 			    Console.WriteLine(expanded);
 			    PowerShellHost.PromptWritten = false;

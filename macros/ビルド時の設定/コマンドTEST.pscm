@@ -1,7 +1,7 @@
 ; ============================================================
 ; PSC 全コマンド確認マクロ v3 (Automated Build Verification)
 ; ============================================================
-
+echo off
 ; --- wait (初期起動プロンプトを待機) ---
 wait >
 
@@ -136,11 +136,11 @@ print green 取得されたユーザー名: %CURRENT_USER%
 ; --- echo off/on ---
 print cyan echo off/onテスト開始
 sendln
-echo off
+;echo off
 wait >
 sendln echo "このエコーバックは画面に非表示（ログのみ）"
 wait >
-echo on
+;echo on
 sendln echo "このエコーバックは画面に表示"
 wait >
 print green echo on/off完了（OK）

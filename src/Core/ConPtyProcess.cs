@@ -184,16 +184,16 @@ namespace PowerShellController
 
 			PowerShellHost.SendToPowerShell = delegate(string cmd)
 			{
-			    if (!string.IsNullOrEmpty(cmd))
+			    if (!string.IsNullOrEmpty(cmd) && !PowerShellHost.MacroRunning)
 			        _lastSentCommand = cmd;
-//			    byte[] bytes =
-//			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r\n");
+			        
 			    byte[] bytes =
 			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r");
 			    uint written;
 			    WriteFile(_hInput, bytes, (uint)bytes.Length,
 			        out written, IntPtr.Zero);
 			};
+
 
             Task.Run((Action)ReadOutputLoop);
         }
@@ -293,6 +293,7 @@ namespace PowerShellController
 		
         private static void OutputLine(string line)
         {
+            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] last=[" + (_lastSentCommand ?? "null") + "] endswith=" + (_lastSentCommand != null ? line.EndsWith(_lastSentCommand, StringComparison.Ordinal).ToString() : "n/a"));
             //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] last=[" + (_lastSentCommand ?? "null") + "]");
 			// C# 5.0 での記述
 			//Console.WriteLine(string.Format("[DEBUG] SuppressNextOutput: {0}, LineLength: {1}", PowerShellHost.SuppressNextOutput, line.Trim().Length));
@@ -324,7 +325,7 @@ namespace PowerShellController
 				return;
             }
             
-            // ノイズ行抑制
+            // ノイズ行抑制 ※複数行入力待ちプロンプトは抑止される(改良の余地あり）
             if (line == ">" || line == ">>" || line == ">> ")
 			{
 				return;
@@ -334,6 +335,7 @@ namespace PowerShellController
 			{
 			    if (Console.CursorLeft > 0)
 			        return;
+			    PowerShellHost.SuppressNextOutput = false;
 			    Console.Write(line.TrimEnd() + " ");
 			    if (!_promptReady)
 			        _promptReady = true;
@@ -345,10 +347,13 @@ namespace PowerShellController
 			{
 			    PowerShellHost.CapturedLine = line;
 			    PowerShellHost.CaptureMode = false;
-			    return;
 			}
-
-			Console.WriteLine(line);			
+			//Console.WriteLine("[DBG-TRIM] before=[" + line + "]");
+			if (line.StartsWith("> "))
+			    line = line.Substring(2);
+			//Console.WriteLine("[DBG-TRIM] after=[" + line + "]");
+			Console.WriteLine(line);
+			
         }
 
 
@@ -387,10 +392,9 @@ namespace PowerShellController
 			{
 			    if (Console.CursorLeft > 0)
 			        return;
-			        
+			    PowerShellHost.SuppressNextOutput = false;
 			    Console.Write(remaining.TrimEnd() + " ");
 			    PowerShellHost.PromptWritten = true;
-			    //Console.WriteLine("[DBG-SET] PromptWritten=" + PowerShellHost.PromptWritten );
 			    if (!_promptReady)
 			        _promptReady = true;
 			    if (!PowerShellHost.WaitActive)
@@ -398,6 +402,14 @@ namespace PowerShellController
 			}
             else
             {
+                if (remaining.StartsWith("> "))
+                    remaining = remaining.Substring(2);
+                if (_lastSentCommand != null && remaining.EndsWith(_lastSentCommand, StringComparison.Ordinal))
+                {
+                    _lastSentCommand = null;
+                    return;
+                }
+                if (PowerShellHost.CaptureMode) return;
                 Console.Write(remaining);
             }
         }
@@ -406,6 +418,11 @@ namespace PowerShellController
 		{
 		    _lastSentCommand = null;
 		}
+
+        public static void SetLastSentCommand(string cmd)
+        {
+            _lastSentCommand = cmd;
+        }
         
     }
 }

@@ -16,9 +16,9 @@ namespace PowerShellController
             if (string.IsNullOrEmpty(arg)) return;
 
             if (arg.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
-                PowerShellHost.EchoBack = false;
+                PowerShellHost.MacroEcho = false;
             else if (arg.Trim().Equals("on", StringComparison.OrdinalIgnoreCase))
-                PowerShellHost.EchoBack = true;
+                PowerShellHost.MacroEcho = true;
             else
                 throw new MacroAbortException(
                     "[ERROR] echo: 引数は 'on' または 'off' を指定してください。");

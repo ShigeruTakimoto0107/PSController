@@ -14,6 +14,7 @@ namespace PowerShellController
 
         public void Execute(string arg, ExecutionContext ctx)
         {
+            if (!PowerShellHost.MacroEcho) return;
             if (string.IsNullOrEmpty(arg)) return;
 
             var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);

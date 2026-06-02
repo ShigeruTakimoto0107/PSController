@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 namespace PowerShellController
 {
     public class GetVarCommand : ICommand
@@ -12,10 +14,11 @@ namespace PowerShellController
             if (string.IsNullOrEmpty(arg)) return;
             PowerShellHost.CapturedLine = "";
             PowerShellHost.CaptureMode = true;
+            //Console.WriteLine("[DBG-GETVAR] CaptureMode=true");
+            Thread.Sleep(1000);
             PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
             bool matched = PowerShellHost.WaitUntilMatched(5000);
             ctx.SetVar(arg.Trim(), PowerShellHost.CapturedLine);
-            PowerShellHost.PromptWritten = true;
         }
     }
 }

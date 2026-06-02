@@ -13,6 +13,7 @@ namespace PowerShellController
 
 		public void Execute(string arg, ExecutionContext ctx)
 		{
+    		if (!PowerShellHost.MacroEcho) return;
 		    string line =
 		        VersionInfo.ProgramName + " " +
 		        VersionInfo.Version + " (" +
