@@ -4,9 +4,9 @@ namespace PowerShellController
 {
     public static class VTStripper
     {
-        private static int _currentRow = 0;
-
-        public static string Strip(string input)
+		private static int _currentRow = 0;
+        // 変更後
+        public static string Strip(string input, bool promptReady)
         {
             var sb = new StringBuilder(input.Length);
             int i = 0;
@@ -27,29 +27,34 @@ namespace PowerShellController
                             param.Append(input[i]);
                             i++;
                         }
+						// 変更後
                         if (i < input.Length)
                         {
                             char cmd = input[i];
                             i++;
-                            //if (!ignorePositioning && (cmd == 'H' || cmd == 'f'))
                             if (cmd == 'H' || cmd == 'f')
                             {
-                                string p = param.ToString();
-                                int targetRow = 1;
-                                if (p.Length > 0 && p.Contains(";"))
+                                if (!promptReady)
                                 {
-                                    string rowPart = p.Split(';')[0];
-                                    int parsed;
-                                    if (int.TryParse(rowPart, out parsed) && parsed > 0)
-                                        targetRow = parsed;
-                                }
-                                if (targetRow > _currentRow)
-                                {
-                                    int lines = targetRow - _currentRow;
-                                    for (int n = 0; n < lines; n++)
+                                    string p = param.ToString();
+                                    int targetRow = 1;
+                                    if (p.Length > 0 && p.Contains(";"))
+                                    {
+                                        string[] parts = p.Split(';');
+                                        int parsed;
+                                        if (int.TryParse(parts[0], out parsed) && parsed > 0)
+                                            targetRow = parsed;
+                                    }
+                                    else if (p.Length > 0)
+                                    {
+                                        int parsed;
+                                        if (int.TryParse(p, out parsed) && parsed > 0)
+                                            targetRow = parsed;
+                                    }
+                                    for (int n = _currentRow; n < targetRow; n++)
                                         sb.Append('\n');
+                                    _currentRow = targetRow;
                                 }
-                                _currentRow = targetRow;
                             }
                         }
                         continue;
@@ -69,9 +74,10 @@ namespace PowerShellController
                     i++;
                     continue;
                 }
-                if (input[i] == '\n')
-                    _currentRow++;
-                sb.Append(input[i]);
+
+				if (input[i] == '\n')
+				    _currentRow++;
+				sb.Append(input[i]);
                 i++;
             }
             return sb.ToString();

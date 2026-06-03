@@ -56,7 +56,7 @@ namespace PowerShellController
 			        PowerShellHost.WaitUntilMatched(3000);
 			    }
 			    string expanded = ctx.Expand(line);
-			    ConPtyProcess.SetLastSentCommand(expanded);
+			    //ConPtyProcess.SetLastSentCommand(expanded);
 			    PowerShellHost.SendToPowerShell(expanded);
 			    Console.WriteLine(expanded);
 			    PowerShellHost.PromptWritten = false;

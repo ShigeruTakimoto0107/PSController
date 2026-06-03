@@ -116,8 +116,9 @@ namespace PowerShellController
         private static IntPtr _hInput  = IntPtr.Zero;
         private static IntPtr _hOutput = IntPtr.Zero;
 
-        private static string _lastSentCommand = null;
         private static bool   _promptReady     = false;
+
+		private static string _lastSentCommand = null;
 
 
         public static void Start()
@@ -142,9 +143,9 @@ namespace PowerShellController
                 throw new InvalidOperationException(
                     "CreatePipe(Out) 失敗: " + Marshal.GetLastWin32Error());
 
-//            var size = new COORD { X = 120, Y = 30 };
+//          var size = new COORD { X = 120, Y = 30 };
             var size = new COORD { X =120, Y = 10 };
-//            var size = new COORD { X = 9999, Y = 9999 };
+//          var size = new COORD { X = 9999, Y = 9999 };
             int hr = CreatePseudoConsole(
                 size, hPipeInRead, hPipeOutWrite, 0, out _hPC);
             if (hr != 0)
@@ -182,11 +183,12 @@ namespace PowerShellController
                     "CreateProcess 失敗: " + Marshal.GetLastWin32Error());
             CloseHandle(pi.hThread);
 
+			// 変更後
 			PowerShellHost.SendToPowerShell = delegate(string cmd)
 			{
-			    if (!string.IsNullOrEmpty(cmd) && !PowerShellHost.MacroRunning)
+			    if (!string.IsNullOrEmpty(cmd))
 			        _lastSentCommand = cmd;
-			        
+
 			    byte[] bytes =
 			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r");
 			    uint written;
@@ -211,8 +213,8 @@ namespace PowerShellController
                 bool ok = ReadFile(_hOutput, buf, (uint)buf.Length,
                     out bytesRead, IntPtr.Zero);
                     
-                /*
-				// デバッグ：HEXダンプ
+
+				/*// デバッグ：HEXダンプ
 				var hex = new System.Text.StringBuilder();
 				for (int di = 0; di < (int)bytesRead; di++)
 				{
@@ -224,16 +226,14 @@ namespace PowerShellController
 				Console.WriteLine("=END=");                    
                 */
                     
-                    
-                    
                 if (!ok || bytesRead == 0) break;
 
                 string raw = System.Text.Encoding.UTF8.GetString(
                     buf, 0, (int)bytesRead);
-                string text = VTStripper.Strip(raw);
-                //text = text.Replace("\r\n", "\n").Replace("\r", "\n");
-                //text = text.Replace("\r\n", "\n").Replace("\r", "");
-                text = text.Replace("\r", "");
+                    
+				string text = VTStripper.Strip(raw, _promptReady);
+				//Console.WriteLine("[DBG-STRIP] [" + text.Replace("\n", "\\n").Replace("\r", "\\r") + "]");
+				text = text.Replace("\r", "");
 
                 if (isFirst && text.Length > 0)
                 {
@@ -298,23 +298,25 @@ namespace PowerShellController
 		//------------------------------------------
 		// \n で終わる完結した行を処理する
 		//------------------------------------------
-		
         private static void OutputLine(string line)
         {
-            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] last=[" + (_lastSentCommand ?? "null") + "] endswith=" + (_lastSentCommand != null ? line.EndsWith(_lastSentCommand, StringComparison.Ordinal).ToString() : "n/a"));
-            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] last=[" + (_lastSentCommand ?? "null") + "]");
+            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] );
 			// C# 5.0 での記述
 			//Console.WriteLine(string.Format("[DEBUG] SuppressNextOutput: {0}, LineLength: {1}", PowerShellHost.SuppressNextOutput, line.Trim().Length));
 
 			// 抑止したい条件（空行など）であればここで return する
+			// 変更後
 			if (PowerShellHost.SuppressNextOutput && line.Trim().Length == 0)
     		{
-	            PowerShellHost.SuppressNextOutput = false; // 抑止したなら解除
+	            PowerShellHost.SuppressNextOutput = false;
 	            return; 
 	        }
+
+            // > プレフィックス除去（エコーバック抑制の比較前に行う）
+            if (line.StartsWith("> "))
+                line = line.Substring(2);
             
             // エコーバック抑制（完全一致）
-            
 			if (_lastSentCommand != null)
 			{
 			    if (string.Equals(line, _lastSentCommand, StringComparison.Ordinal) ||
@@ -324,15 +326,14 @@ namespace PowerShellController
 			        return;
 			    }
 			}
+			// エコーバック抑制（前方一致）
+			if (_lastSentCommand != null &&
+			    line.Length > 0 &&
+			    _lastSentCommand.StartsWith(line, StringComparison.Ordinal))
+			{
+			    return;
+			}
 
-            // エコーバック抑制（前方一致）
-            if (_lastSentCommand != null &&
-                line.Length > 0 &&
-                _lastSentCommand.StartsWith(line, StringComparison.Ordinal))
-            {
-				return;
-            }
-            
             // ノイズ行抑制 ※複数行入力待ちプロンプトは抑止される(改良の余地あり）
             if (line == ">" || line == ">>" || line == ">> ")
 			{
@@ -372,25 +373,6 @@ namespace PowerShellController
         private static void OutputRemaining(string remaining)
         {
 	        //Console.WriteLine("[DBG-REM] PromptWritten=" + PowerShellHost.PromptWritten + " [" + remaining + "]");
-	        
-            // エコーバック抑制（完全一致）
-            if (_lastSentCommand != null &&
-                (string.Equals(remaining, _lastSentCommand,
-                     StringComparison.Ordinal) ||
-                 string.Equals(remaining.TrimStart('>', ' '),
-                     _lastSentCommand, StringComparison.Ordinal)))
-            {
-                _lastSentCommand = null;
-                return;
-            }
-
-            // エコーバック抑制（前方一致）
-            if (_lastSentCommand != null &&
-                remaining.Length > 0 &&
-                _lastSentCommand.StartsWith(remaining, StringComparison.Ordinal))
-            {
-                return;
-            }
 
             // ノイズ行抑制
             if (remaining == ">" || remaining == ">>" || remaining == ">> ")
@@ -412,24 +394,10 @@ namespace PowerShellController
             {
                 if (remaining.StartsWith("> "))
                     remaining = remaining.Substring(2);
-                if (_lastSentCommand != null && remaining.EndsWith(_lastSentCommand, StringComparison.Ordinal))
-                {
-                    _lastSentCommand = null;
-                    return;
-                }
+
                 if (PowerShellHost.CaptureMode) return;
                 Console.Write(remaining);
             }
-        }
-        
-        public static void ClearLastSentCommand()
-		{
-		    _lastSentCommand = null;
-		}
-
-        public static void SetLastSentCommand(string cmd)
-        {
-            _lastSentCommand = cmd;
         }
         
     }
