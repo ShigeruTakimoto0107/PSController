@@ -31,6 +31,8 @@ namespace PowerShellController
 			}
 		    string expanded = ctx.Expand(arg);
 		    PowerShellHost.SendToPowerShell(expanded);
+		    if (!string.IsNullOrEmpty(expanded))
+			    Console.WriteLine(expanded);
 		    PowerShellHost.PromptWritten = false;
 		}
     }

@@ -300,7 +300,8 @@ namespace PowerShellController
 		//------------------------------------------
         private static void OutputLine(string line)
         {
-            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] );
+            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] " );
+            //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] MacroRunning = [" +  PowerShellHost.MacroRunning + "]" );
 			// C# 5.0 での記述
 			//Console.WriteLine(string.Format("[DEBUG] SuppressNextOutput: {0}, LineLength: {1}", PowerShellHost.SuppressNextOutput, line.Trim().Length));
 
@@ -317,7 +318,7 @@ namespace PowerShellController
                 line = line.Substring(2);
             
             // エコーバック抑制（完全一致）
-			if (!PowerShellHost.MacroRunning && _lastSentCommand != null)
+			if (_lastSentCommand != null)
 			{
 			    if (string.Equals(line, _lastSentCommand, StringComparison.Ordinal) ||
 			        line.EndsWith(_lastSentCommand, StringComparison.Ordinal))
@@ -327,7 +328,7 @@ namespace PowerShellController
 			    }
 			}
 			// エコーバック抑制（前方一致）
-			if (!PowerShellHost.MacroRunning && _lastSentCommand != null &&
+			if (_lastSentCommand != null &&
 			    line.Length > 0 &&
 			    _lastSentCommand.StartsWith(line, StringComparison.Ordinal))
 			{

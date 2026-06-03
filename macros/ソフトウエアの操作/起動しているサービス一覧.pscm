@@ -1,4 +1,4 @@
 wait >
-
 sendln ../macros/ps1/List_Of_Running_Services.ps1
+wait >
 print cyan 起動しているサービス一覧...

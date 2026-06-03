@@ -7,7 +7,6 @@ wait >
 sendln ../macros/ps1/Burauza_Navigate.ps1 %URL%
 print cyan Google通常検索にナビゲート...
 wait >
-
 sendln ../macros/ps1/Burauza_Google_Search.ps1 "横浜 ラーメン"
 print cyan 横浜 ラーメンで検索...
 

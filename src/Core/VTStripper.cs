@@ -32,30 +32,35 @@ namespace PowerShellController
                         {
                             char cmd = input[i];
                             i++;
-                            if (cmd == 'H' || cmd == 'f')
-                            {
-                                if (!promptReady)
-                                {
-                                    string p = param.ToString();
-                                    int targetRow = 1;
-                                    if (p.Length > 0 && p.Contains(";"))
-                                    {
-                                        string[] parts = p.Split(';');
-                                        int parsed;
-                                        if (int.TryParse(parts[0], out parsed) && parsed > 0)
-                                            targetRow = parsed;
-                                    }
-                                    else if (p.Length > 0)
-                                    {
-                                        int parsed;
-                                        if (int.TryParse(p, out parsed) && parsed > 0)
-                                            targetRow = parsed;
-                                    }
-                                    for (int n = _currentRow; n < targetRow; n++)
-                                        sb.Append('\n');
-                                    _currentRow = targetRow;
-                                }
-                            }
+							if (cmd == 'H' || cmd == 'f')
+							{
+							    if (!promptReady)
+							    {
+							        string p = param.ToString();
+							        int targetRow = 1;
+							        if (p.Length > 0 && p.Contains(";"))
+							        {
+							            string[] parts = p.Split(';');
+							            int parsed;
+							            if (int.TryParse(parts[0], out parsed) && parsed > 0)
+							                targetRow = parsed;
+							        }
+							        else if (p.Length > 0)
+							        {
+							            int parsed;
+							            if (int.TryParse(p, out parsed) && parsed > 0)
+							                targetRow = parsed;
+							        }
+							        for (int n = _currentRow; n < targetRow; n++)
+							            sb.Append('\n');
+							        _currentRow = targetRow;
+							    }
+							    else
+							    {
+							        // promptReady後は常に\nを挿入してlineBufをリセット
+							        sb.Append('\n');
+							    }
+							}
                         }
                         continue;
                     }
