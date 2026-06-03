@@ -1,3 +1,5 @@
+## C:\PSController\src\Core\VersionInfo.cs
+```csharp
 namespace PowerShellController {
       public static class VersionInfo {
           public const string ProgramName = "PowerShellController";
@@ -7,3 +9,4 @@ namespace PowerShellController {
           public const string GitVersion  = "eaaf122";
       }
 }
+```

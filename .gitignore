@@ -6,6 +6,6 @@ convert.bat
 *.pdb
 bin/
 obj/
-out_md/
 backup/
 macros/bak/
+macros/自動実行/EdgeProfile

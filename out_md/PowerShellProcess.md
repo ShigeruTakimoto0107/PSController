@@ -1,0 +1,151 @@
+## C:\PSController\src\Core\PowerShellProcess.cs
+```csharp
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+namespace PowerShellController
+{
+	public static class PowerShellProcess
+	{
+		private static Process process;
+		private static string lastUserInput = null;
+		public static void SetLastUserInput(string input)
+		{
+			lastUserInput = input;
+		}
+		public static int GetProcessId()
+		{
+			return process != null ? process.Id : -1;
+		}
+		public static void Start()
+		{
+			var psi = new ProcessStartInfo();
+			psi.FileName = "powershell.exe";
+			psi.UseShellExecute = false;
+			psi.RedirectStandardInput = true;
+			psi.RedirectStandardOutput = true;
+			psi.RedirectStandardError = true;
+			psi.CreateNoWindow = true;
+			psi.Arguments = "-NoExit -ExecutionPolicy Bypass";
+			psi.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			process = Process.Start(psi);
+			process.StandardInput.Flush();
+			PowerShellHost.SendToPowerShell = delegate(string cmd)
+			{
+				process.StandardInput.WriteLine(cmd);
+				process.StandardInput.Flush();
+			};
+			Task.Run(() =>
+			{
+				string buffer = "";
+				while (true)
+				{
+					int ch = process.StandardOutput.Read();
+					if (ch < 0) break;
+					char c = (char)ch;
+					buffer += c;
+					lock (PowerShellHost.WaitLock)
+					{
+						if (PowerShellHost.WaitActive)
+						{
+							PowerShellHost.WaitBuffer.Append(char.ToLower(c));
+							if (PowerShellHost.WaitBuffer.ToString().Contains(PowerShellHost.WaitPattern))
+							{
+								PowerShellHost.WaitActive = false;
+								PowerShellHost.WaitEvent.Set();
+								PowerShellHost.WaitBuffer.Length = 0;
+							}
+						}
+					}
+					if (buffer.EndsWith(PowerShellHost.PromptPattern + " "))
+					{
+						if (!PowerShellHost.CaptureMode)
+						{
+							Console.Write(buffer);
+							PowerShellHost.PromptWritten = true;
+						}
+						else
+						{
+							PowerShellHost.CaptureMode = false;
+							PowerShellHost.PromptWritten = true;
+							lock (PowerShellHost.WaitLock)
+							{
+								if (PowerShellHost.WaitActive)
+								{
+									PowerShellHost.WaitActive = false;
+									PowerShellHost.WaitEvent.Set();
+								}
+							}
+						}
+						buffer = "";
+						continue;
+					}
+					if (c == '\n')
+					{
+						string line = buffer.TrimEnd('\r', '\n');
+						if (PowerShellHost.CaptureMode)
+						{
+							if (lastUserInput != null &&
+								string.Equals(line, lastUserInput, StringComparison.Ordinal))
+							{
+								buffer = "";
+								continue;
+							}
+							if (PowerShellHost.LastSentCommand != null &&
+								string.Equals(line, PowerShellHost.LastSentCommand, StringComparison.Ordinal))
+							{
+								PowerShellHost.LastSentCommand = null;
+								buffer = "";
+								continue;
+							}
+							if (!string.IsNullOrWhiteSpace(line))
+								PowerShellHost.CapturedLine = line;
+							buffer = "";
+							continue;
+						}
+					//	if (!PowerShellHost.EchoBack &&
+					//		PowerShellHost.LastSentCommand != null &&
+					//		string.Equals(line, PowerShellHost.LastSentCommand,
+					//			StringComparison.Ordinal))
+					//	{
+							PowerShellHost.LastSentCommand = null;
+							buffer = "";
+					//		continue;
+					//	}
+						if (lastUserInput != null &&
+							string.Equals(line, lastUserInput, StringComparison.Ordinal))
+						{
+							buffer = "";
+							continue;
+						}
+						Console.WriteLine(line);
+						buffer = "";
+					}
+				}
+			});
+			Task.Run(() =>
+			{
+				while (true)
+				{
+					int ch = process.StandardError.Read();
+					if (ch < 0) break;
+					char c = (char)ch;
+					Console.Write(c);
+					lock (PowerShellHost.WaitLock)
+					{
+						if (PowerShellHost.WaitActive)
+						{
+							PowerShellHost.WaitBuffer.Append(char.ToLower(c));
+							if (PowerShellHost.WaitBuffer.ToString().Contains(PowerShellHost.WaitPattern))
+							{
+								PowerShellHost.WaitActive = false;
+								PowerShellHost.WaitEvent.Set();
+								PowerShellHost.WaitBuffer.Length = 0;
+							}
+						}
+					}
+				}
+			});
+		}
+	}
+}```
