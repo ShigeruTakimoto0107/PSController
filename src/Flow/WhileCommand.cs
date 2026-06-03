@@ -22,10 +22,8 @@ namespace PowerShellController
             else
                 left = ctx.Expand(left);
             right = ctx.Expand(right);
-            bool result = false;
-            if (op == "==" || op == "=") result = (left == right);
-            else if (op == "!=")         result = (left != right);
-            if (!result)
+
+            if (!IfCommand.Compare(left, op, right))
                 ctx.WhileSkipRequested = true;
         }
     }

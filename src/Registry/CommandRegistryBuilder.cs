@@ -28,6 +28,7 @@ namespace PowerShellController
             new GotoCommand().Register(registry);
             new CallCommand().Register(registry);
             new ReturnCommand().Register(registry);
+            new CalcCommand().Register(registry);
             new GetVarCommand().Register(registry);
             new EchoCommand().Register(registry);
             new KillPsCommand().Register(registry);

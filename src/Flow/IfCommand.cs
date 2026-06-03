@@ -16,15 +16,27 @@ namespace PowerShellController
             string left = parts[0];
             string op = parts[1];
             string right = parts[2];
+            
             if (left.Equals("lastwait", StringComparison.OrdinalIgnoreCase))
                 left = ctx.LastWaitResult ? "ok" : "ng";
             else
                 left = ctx.Expand(left);
+            
             right = ctx.Expand(right);
-            bool result = false;
-            if (op == "==" || op == "=") result = (left == right);
-            else if (op == "!=") result = (left != right);
-            ctx.PushIf(result);
+            ctx.PushIf(Compare(left, op, right));
+        }
+        
+        public static bool Compare(string left, string op, string right)
+        {
+            int l = 0, r = 0;
+            bool isNum = int.TryParse(left, out l) && int.TryParse(right, out r);
+            if (op == "==" || op == "=") return isNum ? l == r : left == right;
+            if (op == "!=")              return isNum ? l != r : left != right;
+            if (op == ">")               return isNum && l > r;
+            if (op == "<")               return isNum && l < r;
+            if (op == ">=")              return isNum && l >= r;
+            if (op == "<=")              return isNum && l <= r;
+            return false;
         }
     }
 }
