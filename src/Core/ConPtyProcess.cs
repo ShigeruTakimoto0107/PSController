@@ -317,7 +317,7 @@ namespace PowerShellController
                 line = line.Substring(2);
             
             // エコーバック抑制（完全一致）
-			if (_lastSentCommand != null)
+			if (!PowerShellHost.MacroRunning && _lastSentCommand != null)
 			{
 			    if (string.Equals(line, _lastSentCommand, StringComparison.Ordinal) ||
 			        line.EndsWith(_lastSentCommand, StringComparison.Ordinal))
@@ -327,7 +327,7 @@ namespace PowerShellController
 			    }
 			}
 			// エコーバック抑制（前方一致）
-			if (_lastSentCommand != null &&
+			if (!PowerShellHost.MacroRunning && _lastSentCommand != null &&
 			    line.Length > 0 &&
 			    _lastSentCommand.StartsWith(line, StringComparison.Ordinal))
 			{
