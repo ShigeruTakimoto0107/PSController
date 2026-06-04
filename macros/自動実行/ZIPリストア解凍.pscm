@@ -9,13 +9,16 @@ if "%ret%" == "False"
     print red バックアップファイルが存在しません。処理を終了します...
     goto NO_BACKUP
 endif
+
 print cyan [2/3] 展開処理を開始します...
+Expand-Archive -Path "../macros/自動実行/backup/data_backup.zip" -DestinationPath "../macros/自動実行/data" -Force
+
+
 sendln
 wait >
-Expand-Archive -Path "../macros/自動実行/backup/data_backup.zip" -DestinationPath "../macros/自動実行/data" -Force
 print green [SUCCESS] 展開完了: ../macros/自動実行/data
 print yellow [3/3] バックアップファイルを削除します...
-wait >
+
 remove-item "../macros/自動実行/backup/data_backup.zip" -Force
 print green [FINISH] リストア処理が完了しました。
 goto END_PROCESS

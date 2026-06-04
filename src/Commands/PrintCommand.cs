@@ -15,7 +15,11 @@ namespace PowerShellController
         public void Execute(string arg, ExecutionContext ctx)
         {
             if (!PowerShellHost.MacroEcho) return;
-            if (string.IsNullOrEmpty(arg)) return;
+            if (string.IsNullOrEmpty(arg))
+            {
+                Console.WriteLine();
+                return;
+            }
 
             var parts = arg.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0) return;
@@ -39,19 +43,23 @@ namespace PowerShellController
             //------------------------------------------
             //プロンプトのすぐ後なら改行してから表示する
             //------------------------------------------
-            if (PowerShellHost.PromptWritten)
-            {
-            	PowerShellHost.PromptWritten = false;
-                Console.WriteLine();
-            }
 
-			if (map.TryGetValue(colorName, out color))
+			lock (PowerShellHost.ConsoleLock)
 			{
-			    PowerShellHost.WriteLineColored(message, color);
-			}
-			else
-			{
-			    Console.WriteLine(ctx.Expand(arg));
+			    if (PowerShellHost.PromptWritten || Console.CursorLeft > 0)
+			    {
+			        PowerShellHost.PromptWritten = false;
+			        Console.WriteLine();
+			    }
+			    if (map.TryGetValue(colorName, out color))
+			    {
+			        PowerShellHost.WriteLineColored(message, color);
+			    }
+			    else
+			    {
+			        Console.WriteLine(ctx.Expand(arg));
+			    }
+			    PowerShellHost.SuppressNextOutput = true;
 			}
 			
 			// ---------------------------------------

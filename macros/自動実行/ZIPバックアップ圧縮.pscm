@@ -8,11 +8,14 @@ if "%ret%" == "True"
     goto ALREADY_EXISTS
 endif
 
-Compress-Archive -Path "../macros/自動実行/data/*" -DestinationPath "../macros/自動実行/backup/data_backup.zip"
 print cyan [2/3] 圧縮処理を開始します...
+Compress-Archive -Path "../macros/自動実行/data/*" -DestinationPath "../macros/自動実行/backup/data_backup.zip"
+
+
+wait >
 print green [SUCCESS] 圧縮完了: ../macros/自動実行/backup/data_backup.zip
 print yellow [3/3] 元データを安全のため削除します...
-wait >
+
 remove-item "../macros/自動実行/data/*" -Recurse -Force
 wait >
 print green [FINISH] バックアップ処理が完了しました。

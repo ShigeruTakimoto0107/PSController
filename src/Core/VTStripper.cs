@@ -5,9 +5,10 @@ namespace PowerShellController
     public static class VTStripper
     {
 		private static int _currentRow = 0;
-        // 変更後
-        public static string Strip(string input, bool promptReady)
+
+        public static string Strip(string input, bool promptReady, out bool wasProgressPacket)
         {
+            wasProgressPacket = false;
             var sb = new StringBuilder(input.Length);
             int i = 0;
             while (i < input.Length)
@@ -60,6 +61,12 @@ namespace PowerShellController
 							        // promptReady後は常に\nを挿入してlineBufをリセット
 							        sb.Append('\n');
 							    }
+							}
+							else if (cmd == 'l' || cmd == 'h')
+							{
+							    string p = param.ToString();
+							    if (p == "?25" && cmd == 'l')
+							        wasProgressPacket = true;
 							}
                         }
                         continue;

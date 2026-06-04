@@ -228,12 +228,92 @@ namespace PowerShellController
                     
                 if (!ok || bytesRead == 0) break;
 
-                string raw = System.Text.Encoding.UTF8.GetString(
-                    buf, 0, (int)bytesRead);
+                string raw = System.Text.Encoding.UTF8.GetString( buf, 0, (int)bytesRead);
                     
-				string text = VTStripper.Strip(raw, _promptReady);
+				bool wasProgressPacket;
+				string text = VTStripper.Strip(raw, _promptReady, out wasProgressPacket);
 				//Console.WriteLine("[DBG-STRIP] [" + text.Replace("\n", "\\n").Replace("\r", "\\r") + "]");
 				text = text.Replace("\r", "");
+				//Console.WriteLine("[DBG-WPP] was=" + wasProgressPacket + " text=[" + text.Replace("\n","\\n").Substring(0, Math.Min(80, text.Length)) + "]");
+				//Console.WriteLine("[DBG-PM] ProgressMode=" + PowerShellHost.ProgressMode + " ProgressRow=" + PowerShellHost.ProgressRow + " text=[" + text.Replace("\n", "\\n") + "]");
+				// 進捗バー終了直後（ProgressModeがfalseになった直後）：確定表示して改行
+				if (wasProgressPacket)
+				{
+				    // バー行（[ooo...]を含む行）を抽出して上書き表示
+				    
+				    
+				    
+					string barLine = "";
+				    string[] lines = text.Split('\n');
+				    foreach (string ln in lines)
+				    {
+				        string t = ln.Trim();
+				        if (t.Length > 0 && t.Contains("["))
+				        {
+							// [ooo...] の部分を直接切り出す
+				            int bracketStart = t.IndexOf('[');
+				            int bracketEnd = t.LastIndexOf(']');
+				            if (bracketStart >= 0 && bracketEnd > bracketStart)
+				                barLine = t.Substring(bracketStart, bracketEnd - bracketStart + 1).Trim();
+				        }
+				    }
+				    
+				    
+				    
+				    
+				    if (barLine.Length > 0)
+				    {
+				        PowerShellHost.ProgressLastLine = barLine;
+				        lock (PowerShellHost.ConsoleLock)
+				        {
+				            if (PowerShellHost.ProgressRow < 0)
+				                PowerShellHost.ProgressRow = Console.CursorTop;
+				            int savedTop = Console.CursorTop;
+				            int savedLeft = Console.CursorLeft;
+				            Console.CursorTop = PowerShellHost.ProgressRow;
+				            Console.CursorLeft = 0;
+				            string display = barLine;
+				            if (display.Length > Console.WindowWidth - 1)
+				                display = display.Substring(0, Console.WindowWidth - 1);
+				            Console.Write(display.PadRight(Console.WindowWidth - 1));
+				            Console.CursorTop = savedTop;
+				            Console.CursorLeft = savedLeft;
+				        }
+				    }
+					// lineBufに残っている内容をフラッシュ
+				    if (lineBuf.Length > 0)
+				    {
+				        string remaining = lineBuf.ToString();
+				        lineBuf.Length = 0;
+				        bool isPrompt = PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd());
+				        if (isPrompt)
+				        {
+				            OutputRemaining(remaining);
+				            if (!_promptReady)
+				                _promptReady = true;
+				        }
+				        else
+				        {
+				            OutputLine(remaining);
+				        }
+				    }
+				    continue;
+				}
+				else if (PowerShellHost.ProgressRow >= 0 && text.Length > 0)
+				{
+				    // 進捗バー終了後の最初の通常パケット：確定表示して改行
+				    lock (PowerShellHost.ConsoleLock)
+				    {
+				        Console.CursorTop = PowerShellHost.ProgressRow;
+				        Console.CursorLeft = 0;
+				        string last = PowerShellHost.ProgressLastLine;
+				        if (last.Length > Console.WindowWidth - 1)
+				            last = last.Substring(0, Console.WindowWidth - 1);
+				        Console.WriteLine(last.PadRight(Console.WindowWidth - 1));
+				    }
+				    PowerShellHost.ProgressRow = -1;
+				    PowerShellHost.ProgressLastLine = "";
+				}
 
                 if (isFirst && text.Length > 0)
                 {
@@ -268,6 +348,10 @@ namespace PowerShellController
                         //「行が確定した瞬間」を検知して getvar に渡す。
 						if (PowerShellHost.GetVarActive)
 						{
+						
+							//System.IO.File.AppendAllText(@"C:\PSController\debug.log",
+						    //"GETVAR active line=[" + line + "]\r\n");
+						
 						    if (PowerShellHost.GetVarPattern == null)
 						    {
 						        // パターンなし：最後の行を記録
@@ -277,14 +361,16 @@ namespace PowerShellController
 						    else
 						    {
 						        // パターンあり：マッチした行を記録
-								// 変更後
+
 								string matchTarget = line.StartsWith("> ") ? line.Substring(2) : line;
 								bool isPrompt = PowerShellHost.PromptRegex.IsMatch(matchTarget.TrimEnd());
-								// 変更後
+
 								bool isEcho = PowerShellHost.GetVarSentCommand != null &&
 								              (matchTarget == PowerShellHost.GetVarSentCommand ||
 								               matchTarget.EndsWith(PowerShellHost.GetVarSentCommand,
-								                   StringComparison.Ordinal));								                   
+								                   StringComparison.Ordinal) ||
+								               PowerShellHost.GetVarSentCommand.StartsWith(matchTarget,
+								                   StringComparison.Ordinal));				                   
 								//Console.WriteLine("[DBG-GETVAR] matchTarget=[" + matchTarget + "] isPrompt=" + isPrompt + " isEcho=" + isEcho + " LastSent=[" + (PowerShellHost.LastSentCommand ?? "null") + "]");
 
 								if (!isPrompt && !isEcho &&
@@ -405,13 +491,17 @@ namespace PowerShellController
             if (remaining == ">" || remaining == ">>" || remaining == ">> ")
                 return;
 
+			// 変更後
 			if (PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd()))
 			{
-			    if (Console.CursorLeft > 0)
-			        return;
-			    PowerShellHost.SuppressNextOutput = false;
-			    Console.Write(remaining.TrimEnd() + " ");
-			    PowerShellHost.PromptWritten = true;
+			    lock (PowerShellHost.ConsoleLock)
+			    {
+			        if (Console.CursorLeft > 0)
+			            Console.WriteLine();
+			        PowerShellHost.SuppressNextOutput = false;
+			        Console.Write(remaining.TrimEnd() + " ");
+			        PowerShellHost.PromptWritten = true;
+			    }
 			    if (!_promptReady)
 			        _promptReady = true;
 			    if (!PowerShellHost.WaitActive)

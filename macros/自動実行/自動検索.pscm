@@ -12,7 +12,7 @@ print cyan 横浜 ラーメンで検索...
 
 wait >
 ../macros/ps1/Burauza_URL_Return.ps1
-getvar URL
+getvar URL https?:// 10
 print green %URL%
 sendln
 wait >

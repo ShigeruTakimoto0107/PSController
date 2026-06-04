@@ -6,44 +6,86 @@ echo on
 wait >
 
 ; --- .logopen (監査ログ開始コマンドのテスト) ---
-.logopen .\logs\test_run.log
+.logopen ..\logs\test_run.log
 
-; --- ver ---
-ver
-
+wait >
 ; --- print ---
-print cyan === PSC 全コマンド確認自動テストを開始します ===
+print blue === PSC 全コマンド確認自動テストを開始します ===
+print
+; --- ver ---
+print cyan PSC Ver表示テスト
+ver
+print
 
 ; --- setvar ---
 setvar NAME テスト太郎
 setvar FLAG ok
 
 ; --- print + 変数展開 ---
-print white 変数展開テスト: %NAME%
+print cyan 変数展開テスト: %NAME%
+print
+sendln
 
 ; --- sendln ---
 wait >
-sendln echo "sendlnの送信確認"
-wait >
+sendln Write-Host "sendlnの送信確認`n"
+
 
 ; --- pause (時間を1秒に短縮) ---
+wait >
+print cyan pauseテスト
 print yellow 1秒間 pause します...
 pause 1
 print green pause完了
-
-; --- setprompt ---
-setprompt >
-print white setprompt確認OK
+print
 sendln
+; --- setprompt ---
+; PowerShellのプロンプトをMYPROMPT> に変更
+print cyan プロンプト変更テスト
+wait >
+
+sendln function prompt { "MYPROMPT> " }
+; PSController側のプロンプトパターンを新しい正規表現に切り替え
+setprompt ^MYPROMPT>\s*$
+
+print magenta  新プロンプトでsendln確認
+wait >
+sendln Write-Host "hello_setprompt"
+
+
+wait hello_setprompt
+print green 新プロンプト下でコマンド実行成功（OK）
+print
+
+; プロンプトをデフォルトに戻す
+print magenta プロンプトをデフォルトに戻す
+sendln
+wait >
+sendln function prompt { "PS $PWD> " }
+
+setprompt ^PS .+>\s*$
+
+print magenta デフォルトプロンプト復帰確認
+wait >
+sendln Write-Host "back_to_default"
+
+wait back_to_default
+
+print green  デフォルトプロンプト復帰成功（OK）
+print 
+
 ; --- waitto 正常系 ---
+print cyan waittoテスト
+sendln
 wait >
 sendln echo "waitto_test_success"
 waitto 5 waitto_test_success
 if lastwait == ok
-    print green waitto成功
+    print green waitto成功（OK）
 else
     print red waittoタイムアウト（NG）
 endif
+print
 
 ; --- waitto タイムアウト → lastwait == ng ---
 print yellow waittoタイムアウトテスト開始（2秒間意図的に待機します）
@@ -53,8 +95,10 @@ if lastwait == ng
 else
     print red waittoタイムアウト失敗（NG）
 endif
+print
 
 ; --- if / elseif / else / endif ---
+print cyan if / elseif / else / endif テスト
 setvar FLAG maybe
 if %FLAG% == ok
     print red IFが真（NG）
@@ -63,6 +107,7 @@ elseif %FLAG% == maybe
 else
     print red ELSEが真（NG）
 endif
+print
 
 ; --- if 偽 → else ---
 setvar FLAG ng
@@ -71,6 +116,7 @@ if %FLAG% == ok
 else
     print green ELSEが真（OK）
 endif
+print
 
 ; --- loop / endloop ---
 print cyan loopテスト開始 (3回ループ)
@@ -81,16 +127,22 @@ loop 3
     sendln echo "ループ実行中"
 endloop
 print green loop 3回完了（OK）
+print
 
 ; --- loop / break ---
 print cyan loop+breakテスト開始 (10回指定、1回目で脱出)
-sendln
+
 loop 10
     wait >
     sendln echo "break実行前"
     break
 endloop
+
+
+wait >
+
 print green breakで脱出（OK）
+print
 
 ; --- goto 前方ジャンプ ---
 print cyan gotoテスト開始
@@ -98,25 +150,30 @@ goto GOTO_TARGET
 print red gotoスキップされるべき（NG）
 :GOTO_TARGET
 print green goto前方ジャンプ（OK）
+print
 
 ; --- goto 後方ジャンプ（1回だけ）---
 setvar JUMPED no
 goto JUMP_CHECK
+
 :JUMP_BACK
 setvar JUMPED yes
 goto JUMP_END
+
 :JUMP_CHECK
 if %JUMPED% == no
     goto JUMP_BACK
 endif
+
 :JUMP_END
 print green goto後方ジャンプ（OK）
+print
 
 ; --- call / return ---
 print cyan call/returnテスト開始
 call SUBROUTINE
 print green callから戻った（OK）
-
+print
 ; --- call + 変数共有 ---
 setvar CALL_VAR before
 call SET_VAR
@@ -125,56 +182,103 @@ if %CALL_VAR% == after
 else
     print red call変数共有（NG）
 endif
+print
+sendln
+
+; 四則演算テスト
+wait >
+
+setvar A 10
+setvar B 3
+print cyan 四則演算テスト
+
+calc RESULT %A% + %B%
+print green 加算: %RESULT%
+
+calc RESULT %A% - %B%
+print green 減算: %RESULT%
+
+calc RESULT %A% * %B%
+print green 乗算: %RESULT%
+
+calc RESULT %A% / %B%
+print green 除算: %RESULT%
+
+print cyan whileループ+比較テスト
+; ループ+比較テスト
+setvar COUNT 0
+:loop_start
+
+while %COUNT% < 5
+    calc COUNT %COUNT% + 1
+    print green COUNT: %COUNT%
+endwhile
+
+print
+
+sendln
 
 ; --- getvar ---
-print cyan getvarテスト開始（環境変数からユーザー名を取得）
+; パターンなし（従来動作）
+print cyan getvarテスト（環境変数からユーザー名を取得）
 wait >
 sendln $env:USERNAME
-getvar CURRENT_USER
-print green 取得されたユーザー名: %CURRENT_USER%
+getvar RESULT
+print green 結果: %RESULT%（OK）
+print
+;sendln
+; パターンあり
+print cyan getvarテスト（パターンマッチで文字列を取得）
+;wait >
+sendln $env:USERNAME
+getvar RESULT \w+ 5
+print green パターン一致: %RESULT%（OK）
+print
 
 ; --- echo off/on ---
 print cyan echo off/onテスト開始
 sendln
-;echo off
+echo off
 wait >
-sendln echo "このエコーバックは画面に非表示（ログのみ）"
-wait >
-;echo on
-sendln echo "このエコーバックは画面に表示"
-wait >
+print red このPrintテキストは画面に非表示（ログにもでない）
+echo on
+print magenta このPrintテキストは画面に表示（ログにはでない）
 print green echo on/off完了（OK）
+print
 
 ; --- include ---
 print cyan includeテスト開始
 include Test_Include.pscm
 
 print green includeから戻った（OK）
+print
 
 ; --- admin (UAC昇格) についての案内 ---
-print yellow [INFO] adminコマンドはUACポップアップで自動化を妨げるため、ビルドテストではスキップします
-
+print yellow [INFO] admin コマンドはUACポップアップで自動化を妨げるため、ビルドテストではスキップします
+print
 goto END
 
 ; ============================================================
 ; サブルーチン定義エリア
 ; ============================================================
 :SUBROUTINE
-print green サブルーチン実行中
+print magenta サブルーチン実行中
 return
 
 :SET_VAR
 setvar CALL_VAR after
 return
+print
 
 :END
 
 ; --- .logclose (ログの安全なクローズテスト) ---
-print cyan === 全コマンド自動検証が完了しました ===
-
+print blue === 全コマンド自動検証が完了しました ===
+print
 .logclose
 
 print cyan === ３秒停止します ===
+
 pause 3
 ; --- exit 入れないと制御が戻らない ---
 ;exit

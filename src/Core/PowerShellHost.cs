@@ -48,6 +48,9 @@ namespace PowerShellController
         // Printエコーバック制御（デフォルトは on）
         public static bool MacroEcho = true;
         
+        // コンソールロック
+		public static readonly object ConsoleLock = new object();
+        
         // WAIT
 		public static void BeginWait(string pattern)
 		{
@@ -77,10 +80,11 @@ namespace PowerShellController
         // 色付き出力
         public static void WriteLineColored(string text, ConsoleColor color)
         {
-            var old = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            Console.WriteLine(text);
-            Console.ForegroundColor = old;
+		    var old = Console.ForegroundColor;
+		    Console.ForegroundColor = color;
+		    Console.WriteLine(text);
+		    Console.ForegroundColor = old;
+		    Console.ResetColor();
         }
         
         
@@ -92,6 +96,11 @@ namespace PowerShellController
 		public static DateTime GetVarLastReceive;
 		public static string GetVarPattern = null;
 		public static bool GetVarMatched = false;
-
+		
+		//------------------------------
+		// 進捗バー表示用フィールド
+		//------------------------------
+		public static int ProgressRow = -1;
+		public static string ProgressLastLine = "";
     }
 }
