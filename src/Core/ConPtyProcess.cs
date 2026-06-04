@@ -118,7 +118,7 @@ namespace PowerShellController
 
         private static bool   _promptReady     = false;
 
-		private static string _lastSentCommand = null;
+
 
 
         public static void Start()
@@ -187,7 +187,7 @@ namespace PowerShellController
 			PowerShellHost.SendToPowerShell = delegate(string cmd)
 			{
 			    if (!string.IsNullOrEmpty(cmd))
-			        _lastSentCommand = cmd;
+			        PowerShellHost.LastSentCommand = cmd;
 
 			    byte[] bytes =
 			        System.Text.Encoding.UTF8.GetBytes(cmd + "\r");
@@ -268,8 +268,34 @@ namespace PowerShellController
                         //「行が確定した瞬間」を検知して getvar に渡す。
 						if (PowerShellHost.GetVarActive)
 						{
-						    PowerShellHost.GetVarLastLine = line;
-						    PowerShellHost.GetVarLastReceive = DateTime.Now;
+						    if (PowerShellHost.GetVarPattern == null)
+						    {
+						        // パターンなし：最後の行を記録
+						        PowerShellHost.GetVarLastLine = line;
+						        PowerShellHost.GetVarLastReceive = DateTime.Now;
+						    }
+						    else
+						    {
+						        // パターンあり：マッチした行を記録
+								// 変更後
+								string matchTarget = line.StartsWith("> ") ? line.Substring(2) : line;
+								bool isPrompt = PowerShellHost.PromptRegex.IsMatch(matchTarget.TrimEnd());
+								// 変更後
+								bool isEcho = PowerShellHost.GetVarSentCommand != null &&
+								              (matchTarget == PowerShellHost.GetVarSentCommand ||
+								               matchTarget.EndsWith(PowerShellHost.GetVarSentCommand,
+								                   StringComparison.Ordinal));								                   
+								//Console.WriteLine("[DBG-GETVAR] matchTarget=[" + matchTarget + "] isPrompt=" + isPrompt + " isEcho=" + isEcho + " LastSent=[" + (PowerShellHost.LastSentCommand ?? "null") + "]");
+
+								if (!isPrompt && !isEcho &&
+								    System.Text.RegularExpressions.Regex.IsMatch(matchTarget,
+								        PowerShellHost.GetVarPattern))
+								{
+								    PowerShellHost.GetVarLastLine = matchTarget;
+								    PowerShellHost.GetVarMatched = true;
+								    PowerShellHost.GetVarActive = false;
+								}
+						    }
 						}
                         
                     }
@@ -318,19 +344,19 @@ namespace PowerShellController
                 line = line.Substring(2);
             
             // エコーバック抑制（完全一致）
-			if (_lastSentCommand != null)
+			if (PowerShellHost.LastSentCommand != null)
 			{
-			    if (string.Equals(line, _lastSentCommand, StringComparison.Ordinal) ||
-			        line.EndsWith(_lastSentCommand, StringComparison.Ordinal))
+			    if (string.Equals(line, PowerShellHost.LastSentCommand, StringComparison.Ordinal) ||
+			        line.EndsWith(PowerShellHost.LastSentCommand, StringComparison.Ordinal))
 			    {
-			        _lastSentCommand = null;
+			        PowerShellHost.LastSentCommand = null;
 			        return;
 			    }
 			}
 			// エコーバック抑制（前方一致）
-			if (_lastSentCommand != null &&
+			if (PowerShellHost.LastSentCommand != null &&
 			    line.Length > 0 &&
-			    _lastSentCommand.StartsWith(line, StringComparison.Ordinal))
+			    PowerShellHost.LastSentCommand.StartsWith(line, StringComparison.Ordinal))
 			{
 			    return;
 			}

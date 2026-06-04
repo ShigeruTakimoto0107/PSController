@@ -14,6 +14,10 @@ namespace PowerShellController
         internal static bool WaitActive = false;
 
         public static Action<string> SendToPowerShell { get; set; }
+        
+        // 最後に送信したコマンド
+		public static string LastSentCommand = null;
+		public static string GetVarSentCommand = null;
 
 		// マクロ実行中かどうかのフラグ
 		public static bool MacroRunning = false;
@@ -44,9 +48,6 @@ namespace PowerShellController
         // Printエコーバック制御（デフォルトは on）
         public static bool MacroEcho = true;
         
-        // sendln が送信した最後のコマンド（エコーバック抑制用）
-        public static string LastSentCommand = null;
-
         // WAIT
 		public static void BeginWait(string pattern)
 		{
@@ -89,6 +90,8 @@ namespace PowerShellController
 		public static bool GetVarActive = false;
 		public static string GetVarLastLine = "";
 		public static DateTime GetVarLastReceive;
+		public static string GetVarPattern = null;
+		public static bool GetVarMatched = false;
 
     }
 }
