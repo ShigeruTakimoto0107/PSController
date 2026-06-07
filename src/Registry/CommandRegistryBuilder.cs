@@ -33,6 +33,7 @@ namespace PowerShellController
             new EchoCommand().Register(registry);
             new KillPsCommand().Register(registry);
             new ExecCommand().Register(registry);
+            //new SetWindowCommand().Register(registry);
         }
     }
 }

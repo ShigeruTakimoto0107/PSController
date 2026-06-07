@@ -102,5 +102,7 @@ namespace PowerShellController
 		//------------------------------
 		public static int ProgressRow = -1;
 		public static string ProgressLastLine = "";
+		
+		public static DateTime ProgressLastReceive = DateTime.MinValue;
     }
 }

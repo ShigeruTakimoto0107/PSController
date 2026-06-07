@@ -27,7 +27,7 @@ namespace PowerShellController
 		        PowerShellHost.PromptWritten = false;
 		        Console.WriteLine();
 		    }
-		    PowerShellHost.WriteLineColored(line, ConsoleColor.Green);
+		    PowerShellHost.WriteLineColored(line, ConsoleColor.White);
 		    // ---------------------------------------
 			// Varコマンドは表示後の空行を抑止する
 			// ---------------------------------------

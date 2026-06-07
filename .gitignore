@@ -9,6 +9,6 @@ obj/
 backup/
 out_md/
 macros/bak/
-macros/自動実行/EdgeProfile
-macros/自動実行/Data
-macros/自動実行/backup
+macros/Automation/EdgeProfile
+macrosAutomation/Data
+macros/Automation/backup

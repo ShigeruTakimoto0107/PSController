@@ -42,8 +42,12 @@ namespace PowerShellController
                         Console.ResetColor();
                         continue;
                     }
-                    if (!Path.IsPathRooted(arg))
-                        arg = Path.Combine(Path.GetDirectoryName(fullPath), arg);
+
+                    //if (!Path.IsPathRooted(arg))
+                    //    arg = Path.Combine(Path.GetDirectoryName(fullPath), arg);
+					if (!Path.IsPathRooted(arg))
+                        arg = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, arg);
+
                     if (!File.Exists(arg))
                     {
                         Console.ForegroundColor = ConsoleColor.Red;

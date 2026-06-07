@@ -1,3 +1,4 @@
+//全コマンドの基底IF
 namespace PowerShellController
 {
     public interface ICommand

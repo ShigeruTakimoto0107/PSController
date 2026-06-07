@@ -48,7 +48,7 @@ namespace PowerShellController
 		        h(arg, ctx);
 		    }
 			else
-			{
+			{ // unknownコマンド（sendlnと同じ動き）
 			    if (!PowerShellHost.PromptWritten)
 			    {
 			        PowerShellHost.BeginWait(PowerShellHost.PromptPattern);
@@ -59,7 +59,8 @@ namespace PowerShellController
 
 			    PowerShellHost.SendToPowerShell(expanded);
 				if (!string.IsNullOrEmpty(expanded))
-    				Console.WriteLine(expanded);
+					//コマンドのあと空行が抑止されるので\nを付加
+    				Console.WriteLine(expanded + "\n");
 			    PowerShellHost.PromptWritten = false;
 			}
 		}

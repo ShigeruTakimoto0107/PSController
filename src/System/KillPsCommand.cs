@@ -9,23 +9,33 @@ namespace PowerShellController
         {
             registry.Register(Name, Execute);
         }
-        public void Execute(string arg, ExecutionContext ctx)
+		public void Execute(string arg, ExecutionContext ctx)
         {
+            if (PowerShellHost.PromptWritten)
+            {
+                PowerShellHost.PromptWritten = false;
+                Console.WriteLine();
+            }
             int myPid = Process.GetCurrentProcess().Id;
-            int childPid = PowerShellProcess.GetProcessId();
+            int childPid = ConPtyProcess.GetProcessId();
+            string myExeName = System.IO.Path.GetFileNameWithoutExtension(
+                Process.GetCurrentProcess().MainModule.FileName).ToLower();
+
+            // PowerShellプロセスを終了（自分の子プロセス以外）
             foreach (Process p in Process.GetProcessesByName("powershell"))
             {
-                if (p.Id == myPid || p.Id == childPid)
-                    continue;
-                try
-                {
-                    p.Kill();
-                }
-                catch (Exception)
-                {
-                    // 停止できない場合は無視
-                }
+                if (p.Id == childPid) continue;
+                try { p.Kill(); } catch (Exception) { }
             }
+
+            // PSC自身のプロセスを終了（自分以外）
+            foreach (Process p in Process.GetProcessesByName(myExeName))
+            {
+                if (p.Id == myPid) continue;
+                try { p.Kill(); } catch (Exception) { }
+            }
+
+            PowerShellHost.SuppressNextOutput = true;
         }
     }
 }

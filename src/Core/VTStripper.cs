@@ -6,11 +6,17 @@ namespace PowerShellController
     {
 		private static int _currentRow = 0;
 
-        public static string Strip(string input, bool promptReady, out bool wasProgressPacket)
+		public static string Strip(string input, bool promptReady, out bool wasProgressPacket, out int progressRow)
         {
             wasProgressPacket = false;
+            progressRow = -1;
+            bool cursorHidden = false;
+            bool hasProgressColor = false;
+            
             var sb = new StringBuilder(input.Length);
             int i = 0;
+            
+            
             while (i < input.Length)
             {
                 if (input[i] == '\x1B')
@@ -35,6 +41,30 @@ namespace PowerShellController
                             i++;
 							if (cmd == 'H' || cmd == 'f')
 							{
+							    // ESC[?25l の直後にHコマンドが来た場合のみ進捗バーパケットと判定
+								if (cursorHidden)
+							    {
+							        string p = param.ToString();
+							        if (p.Contains(";"))
+							        {
+							            int parsed;
+							            
+							            
+										if (int.TryParse(p.Split(';')[0], out parsed) && parsed > 1
+							                && hasProgressColor)
+							            {
+							                wasProgressPacket = true;
+							                progressRow = parsed;
+							                //System.IO.File.AppendAllText(@"C:\PSController\debug.log","WPP=true p=[" + p + "] hasColor=true\r\n");
+							            }
+							            else if (int.TryParse(p.Split(';')[0], out parsed) && parsed > 1)
+							            {
+							                //System.IO.File.AppendAllText(@"C:\PSController\debug.log","WPP=skip p=[" + p + "] hasColor=false\r\n");
+							            }
+							            
+							        }
+							        cursorHidden = false;
+							    }
 							    if (!promptReady)
 							    {
 							        string p = param.ToString();
@@ -62,11 +92,22 @@ namespace PowerShellController
 							        sb.Append('\n');
 							    }
 							}
+							else if (cmd == 'm')
+							{
+							    string p = param.ToString();
+							    if (p.Contains("38;5") || p.Contains("48;5"))
+							        hasProgressColor = true;
+							}
 							else if (cmd == 'l' || cmd == 'h')
 							{
 							    string p = param.ToString();
-							    if (p == "?25" && cmd == 'l')
-							        wasProgressPacket = true;
+							    if (p == "?25")
+							    {
+							        if (cmd == 'l')
+							            cursorHidden = true;
+							        else
+							            cursorHidden = false;
+							    }
 							}
                         }
                         continue;

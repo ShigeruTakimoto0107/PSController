@@ -117,9 +117,12 @@ namespace PowerShellController
         private static IntPtr _hOutput = IntPtr.Zero;
 
         private static bool   _promptReady     = false;
+		private static int _childProcessId = 0;
 
-
-
+        public static int GetProcessId()
+        {
+            return _childProcessId;
+        }
 
         public static void Start()
         {
@@ -182,7 +185,7 @@ namespace PowerShellController
                 throw new InvalidOperationException(
                     "CreateProcess 失敗: " + Marshal.GetLastWin32Error());
             CloseHandle(pi.hThread);
-
+			_childProcessId = pi.dwProcessId;
 			// 変更後
 			PowerShellHost.SendToPowerShell = delegate(string cmd)
 			{
@@ -214,7 +217,7 @@ namespace PowerShellController
                     out bytesRead, IntPtr.Zero);
                     
 
-				/*// デバッグ：HEXダンプ
+/*				// デバッグ：HEXダンプ
 				var hex = new System.Text.StringBuilder();
 				for (int di = 0; di < (int)bytesRead; di++)
 				{
@@ -224,45 +227,64 @@ namespace PowerShellController
 				Console.WriteLine("=HEX=");
 				Console.WriteLine(hex.ToString());
 				Console.WriteLine("=END=");                    
-                */
+*/
                     
                 if (!ok || bytesRead == 0) break;
 
                 string raw = System.Text.Encoding.UTF8.GetString( buf, 0, (int)bytesRead);
                     
 				bool wasProgressPacket;
-				string text = VTStripper.Strip(raw, _promptReady, out wasProgressPacket);
-				//Console.WriteLine("[DBG-STRIP] [" + text.Replace("\n", "\\n").Replace("\r", "\\r") + "]");
+				int progressRow;
+				
+				//if (raw == "\x1B[m\r\n")
+				    //System.IO.File.AppendAllText(@"C:\PSController\debug.log","ESCm ProgressRow=" + PowerShellHost.ProgressRow + "\r\n");
+				
+				
+				string text = VTStripper.Strip(raw, _promptReady, out wasProgressPacket, out progressRow);				//Console.WriteLine("[DBG-STRIP] [" + text.Replace("\n", "\\n").Replace("\r", "\\r") + "]");
+
+				//if (text.Contains("Name") && text.Contains("Value"))
+    			//	System.IO.File.AppendAllText(@"C:\PSController\debug.log",
+        		//		"PSVER text=[" + text.Replace("\n","\\n") + "]\r\n");
+
+				//if (raw.Contains("\x1B[8;1H"))
+    			//	System.IO.File.AppendAllText(@"C:\PSController\debug.log","P8 text=[" + text.Replace("\n","\\n").Replace("\r","\\r") + "]\r\n");
+
+
+
 				text = text.Replace("\r", "");
+				//System.IO.File.AppendAllText(@"C:\PSController\debug.log","TEXT=[" + text.Replace("\n","\\n") + "] PR=" + PowerShellHost.ProgressRow + "\r\n");
+				//System.IO.File.AppendAllText(@"C:\PSController\debug.log","TEXT=[" + text.Replace("\n","\\n") + "]\r\n");
+				
 				//Console.WriteLine("[DBG-WPP] was=" + wasProgressPacket + " text=[" + text.Replace("\n","\\n").Substring(0, Math.Min(80, text.Length)) + "]");
 				//Console.WriteLine("[DBG-PM] ProgressMode=" + PowerShellHost.ProgressMode + " ProgressRow=" + PowerShellHost.ProgressRow + " text=[" + text.Replace("\n", "\\n") + "]");
 				// 進捗バー終了直後（ProgressModeがfalseになった直後）：確定表示して改行
+				
+				if (!wasProgressPacket && progressRow > 1 && lineBuf.Length > 0)
+				{
+				    string remaining2 = lineBuf.ToString();
+				    lineBuf.Length = 0;
+				    OutputLine(remaining2);
+				}				
+				
 				if (wasProgressPacket)
 				{
-				    // バー行（[ooo...]を含む行）を抽出して上書き表示
-				    
-				    
-				    
-					string barLine = "";
-				    string[] lines = text.Split('\n');
-				    foreach (string ln in lines)
+				    // バー行（[ooo...]）を抽出
+				    string barLine = "";
+				    string[] progressLines = text.Split('\n');
+				    foreach (string ln in progressLines)
 				    {
 				        string t = ln.Trim();
 				        if (t.Length > 0 && t.Contains("["))
 				        {
-							// [ooo...] の部分を直接切り出す
 				            int bracketStart = t.IndexOf('[');
 				            int bracketEnd = t.LastIndexOf(']');
 				            if (bracketStart >= 0 && bracketEnd > bracketStart)
 				                barLine = t.Substring(bracketStart, bracketEnd - bracketStart + 1).Trim();
 				        }
 				    }
-				    
-				    
-				    
-				    
 				    if (barLine.Length > 0)
 				    {
+				        // 進捗バーとして上書き表示
 				        PowerShellHost.ProgressLastLine = barLine;
 				        lock (PowerShellHost.ConsoleLock)
 				        {
@@ -279,42 +301,55 @@ namespace PowerShellController
 				            Console.CursorTop = savedTop;
 				            Console.CursorLeft = savedLeft;
 				        }
+				        // lineBufフラッシュ
+				        if (lineBuf.Length > 0)
+				        {
+				            string remaining = lineBuf.ToString();
+				            lineBuf.Length = 0;
+				            bool isPrompt2 = PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd());
+				            if (isPrompt2)
+				            {
+				                OutputRemaining(remaining);
+				                if (!_promptReady)
+				                    _promptReady = true;
+				            }
+				            else
+				            {
+				                OutputLine(remaining);
+				            }
+				        }
+				        PowerShellHost.ProgressLastReceive = DateTime.Now;
+				        continue;
 				    }
-					// lineBufに残っている内容をフラッシュ
+				    // barLineが空のwasProgressPacketは無視してスキップ
+				    continue;
+				}
+				
+				if (PowerShellHost.ProgressRow >= 0)
+				{
+				    lock (PowerShellHost.WaitLock)
+				    {
+				        if (PowerShellHost.WaitActive)
+				        {
+				            PowerShellHost.WaitBuffer.Append(text.ToLower());
+				            if (PowerShellHost.WaitBuffer.ToString()
+				                    .Contains(PowerShellHost.WaitPattern))
+				            {
+				                PowerShellHost.WaitActive = false;
+				                PowerShellHost.WaitBuffer.Length = 0;
+				                PowerShellHost.WaitEvent.Set();
+				            }
+				        }
+				    }
 				    if (lineBuf.Length > 0)
 				    {
 				        string remaining = lineBuf.ToString();
 				        lineBuf.Length = 0;
-				        bool isPrompt = PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd());
-				        if (isPrompt)
-				        {
-				            OutputRemaining(remaining);
-				            if (!_promptReady)
-				                _promptReady = true;
-				        }
-				        else
-				        {
-				            OutputLine(remaining);
-				        }
+				        OutputLine(remaining);
 				    }
 				    continue;
 				}
-				else if (PowerShellHost.ProgressRow >= 0 && text.Length > 0)
-				{
-				    // 進捗バー終了後の最初の通常パケット：確定表示して改行
-				    lock (PowerShellHost.ConsoleLock)
-				    {
-				        Console.CursorTop = PowerShellHost.ProgressRow;
-				        Console.CursorLeft = 0;
-				        string last = PowerShellHost.ProgressLastLine;
-				        if (last.Length > Console.WindowWidth - 1)
-				            last = last.Substring(0, Console.WindowWidth - 1);
-				        Console.WriteLine(last.PadRight(Console.WindowWidth - 1));
-				    }
-				    PowerShellHost.ProgressRow = -1;
-				    PowerShellHost.ProgressLastLine = "";
-				}
-
+				
                 if (isFirst && text.Length > 0)
                 {
                     while (text.Length > 0 && text[0] == '\n')
@@ -336,13 +371,16 @@ namespace PowerShellController
                         }
                     }
                 }
-
+                
                 foreach (char c in text)
                 {
                     if (c == '\n')
                     {
                         string line = lineBuf.ToString();
                         lineBuf.Length = 0;
+                        
+                        //System.IO.File.AppendAllText(@"C:\PSController\debug.log","NL line=[" + line + "]\r\n");
+
                         OutputLine(line);
                         
                         //「行が確定した瞬間」を検知して getvar に渡す。
@@ -412,6 +450,10 @@ namespace PowerShellController
 		//------------------------------------------
         private static void OutputLine(string line)
         {
+			//if (line.Trim().Length == 0)
+			//    System.IO.File.AppendAllText(@"C:\PSController\debug.log", "EMPTYLINE ProgressRow=" + PowerShellHost.ProgressRow + " SuppressNextOutput=" + PowerShellHost.SuppressNextOutput + "\r\n");        
+        
+            //System.IO.File.AppendAllText(@"C:\PSController\debug.log", "LINE=[" + line + "] Last=[" + (PowerShellHost.LastSentCommand ?? "null") + "]\r\n");
             //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] " );
             //Console.WriteLine("[DBG-LINE] len=" + line.Length + " [" + line + "] MacroRunning = [" +  PowerShellHost.MacroRunning + "]" );
 			// C# 5.0 での記述
@@ -474,6 +516,7 @@ namespace PowerShellController
 			if (line.StartsWith("> "))
 			    line = line.Substring(2);
 			//Console.WriteLine("[DBG-TRIM] after=[" + line + "]");
+			//System.IO.File.AppendAllText(@"C:\PSController\debug.log", "WRITELINE=[" + line + "]\r\n");
 			Console.WriteLine(line);
 			
         }
@@ -483,39 +526,51 @@ namespace PowerShellController
 		// \n で終わっていない行末の断片（プロンプトなど）を処理する
 		//----------------------------------------------------------------
 
-        private static void OutputRemaining(string remaining)
+		private static void OutputRemaining(string remaining)
         {
-	        //Console.WriteLine("[DBG-REM] PromptWritten=" + PowerShellHost.PromptWritten + " [" + remaining + "]");
-
-            // ノイズ行抑制
+            //Console.WriteLine("[DBG-REM] PromptWritten=" + PowerShellHost.PromptWritten + " [" + remaining + "]");
+			//System.IO.File.AppendAllText(@"C:\PSController\debug.log","REMAINING=[" + remaining.Replace("\n","\\n").Substring(0, Math.Min(60, remaining.Length)) + "] ProgressRow=" + PowerShellHost.ProgressRow + " CursorTop=" + Console.CursorTop + " CursorLeft=" + Console.CursorLeft + "\r\n");            // ノイズ行抑制
             if (remaining == ">" || remaining == ">>" || remaining == ">> ")
                 return;
 
-			// 変更後
-			if (PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd()))
-			{
-			    lock (PowerShellHost.ConsoleLock)
-			    {
-			        if (Console.CursorLeft > 0)
-			            Console.WriteLine();
-			        PowerShellHost.SuppressNextOutput = false;
-			        Console.Write(remaining.TrimEnd() + " ");
-			        PowerShellHost.PromptWritten = true;
-			    }
-			    if (!_promptReady)
-			        _promptReady = true;
-			    if (!PowerShellHost.WaitActive)
-			        PowerShellHost.WaitEvent.Set();
-			}
+            if (PowerShellHost.PromptRegex.IsMatch(remaining.TrimEnd()))
+            {
+                lock (PowerShellHost.ConsoleLock)
+                {
+                    // 進捗バー表示中なら確定表示してリセット
+ 					if (PowerShellHost.ProgressRow >= 0 && PowerShellHost.ProgressLastLine.Length > 0)
+                    {
+                        int savedTop = Console.CursorTop;
+                        Console.CursorTop = PowerShellHost.ProgressRow;
+                        Console.CursorLeft = 0;
+                        string last = PowerShellHost.ProgressLastLine;
+                        if (last.Length > Console.WindowWidth - 1)
+                            last = last.Substring(0, Console.WindowWidth - 1);
+                        Console.Write(last.PadRight(Console.WindowWidth - 1));
+                        Console.CursorTop = savedTop;
+                        Console.CursorLeft = 0;
+                        PowerShellHost.ProgressRow = -1;
+                        PowerShellHost.ProgressLastLine = "";
+                    }
+                    if (Console.CursorLeft > 0)
+                        Console.WriteLine();
+                    PowerShellHost.SuppressNextOutput = false;
+                    Console.Write(remaining.TrimEnd() + " ");
+                    PowerShellHost.PromptWritten = true;
+                }
+                if (!_promptReady)
+                    _promptReady = true;
+                if (!PowerShellHost.WaitActive)
+                    PowerShellHost.WaitEvent.Set();
+            }
             else
             {
                 if (remaining.StartsWith("> "))
                     remaining = remaining.Substring(2);
-
                 if (PowerShellHost.CaptureMode) return;
                 Console.Write(remaining);
             }
         }
-        
+
     }
 }

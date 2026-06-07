@@ -12,7 +12,7 @@ switch ($Browser.ToLower()) {
         $exePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
         # ★ デバッグ専用プロファイル（あなたが作ったもの）
-        $userData = "C:\PSController\macros\自動実行\EdgeProfile"
+        $userData = "C:\PSController\macros\Automation\EdgeProfile"
     }
 
     "chrome" {
@@ -20,7 +20,7 @@ switch ($Browser.ToLower()) {
         $exePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 
         # ★ Chrome 用プロファイル（必要なら作成）
-        $userData = "C:\PSController\macros\自動実行\ChromeProfile"
+        $userData = "C:\PSController\macros\Automation\ChromeProfile"
     }
 
     default {

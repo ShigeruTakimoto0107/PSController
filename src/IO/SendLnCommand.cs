@@ -32,7 +32,8 @@ namespace PowerShellController
 		    string expanded = ctx.Expand(arg);
 		    PowerShellHost.SendToPowerShell(expanded);
 		    if (!string.IsNullOrEmpty(expanded))
-			    Console.WriteLine(expanded);
+		    	//コマンドのあと空行が抑止されるので\nを付加
+			    Console.WriteLine(expanded + "\n");
 		    PowerShellHost.PromptWritten = false;
 		}
     }

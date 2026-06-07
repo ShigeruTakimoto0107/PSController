@@ -30,8 +30,8 @@ if not defined CSC_PATH (
 )
 
 set TARGET_EXE=PowerShellController.exe
-set TEST_MACRO=ビルド時の設定\コマンドTEST.pscm
-set REG_MACRO=ビルド時の設定\Register_Association.pscm
+set TEST_MACRO=Build\Test_All.pscm
+set REG_MACRO=Build\Register_Association.pscm
 
 echo Using: %CSC_PATH%
 echo [BUILD] Compiling PowerShellController Project...
@@ -119,7 +119,7 @@ if %ERRORLEVEL% equ 0 (
     if /i "!CHOICE!"=="Y" (
         echo [INFO] 全コマンド確認自動テストを実行します...
         cls
-        .\bin\%TARGET_EXE% .\macros\%TEST_MACRO%
+        .\bin\%TARGET_EXE% ..\macros\%TEST_MACRO%
     ) else (
         echo [INFO] テスト実行をスキップします。
     )
@@ -135,7 +135,7 @@ if %ERRORLEVEL% equ 0 (
         ) else (
             echo [INFO] 関連付け登録マクロを実行します...
             cls
-            .\bin\%TARGET_EXE% .\macros\%REG_MACRO%
+            .\bin\%TARGET_EXE% ..\macros\%REG_MACRO%
         )
     ) else (
         echo [INFO] 関連付け登録をスキップします。
@@ -146,6 +146,5 @@ if %ERRORLEVEL% equ 0 (
 )
 
 :END_PROCESS
-echo --------------------------------------------------
 echo [INFO] Build and Test process finished.
 pause

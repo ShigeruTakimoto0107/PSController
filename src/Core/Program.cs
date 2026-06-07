@@ -6,6 +6,7 @@ namespace PowerShellController
 {
     class Program
     {
+        
         static int Main(string[] args)
         {
             // マクロファイル読み込み
@@ -14,9 +15,10 @@ namespace PowerShellController
             // 実行ファイルのあるディレクトリをカレントディレクトリに設定
 			string exeDir = Path.GetDirectoryName(
 			    System.Reflection.Assembly.GetExecutingAssembly().Location);
+
 			if (!string.IsNullOrEmpty(exeDir))
 			    Environment.CurrentDirectory = exeDir;
-            
+
             if (args.Length >= 1)
             {
                 string filePath = args[0];
@@ -89,4 +91,6 @@ namespace PowerShellController
 			return 0;
         }
     }
+
+    
 }
