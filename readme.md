@@ -96,15 +96,8 @@ Microsoft Edge のデバッグ機能を利用し、
 ### Hello World
 
 ```text
-echo on
-
 wait >
-
-printt Hello World.
-
-wait >
-
-exit
+print Hello World.
 ```
 
 ---
