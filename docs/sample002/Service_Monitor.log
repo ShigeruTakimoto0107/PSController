@@ -1,0 +1,29 @@
+﻿**********************
+Windows PowerShell トランスクリプト開始
+開始時刻: 20260525071700
+ユーザー名: WIN11-64\shigeru
+RunAs ユーザー: WIN11-64\shigeru
+構成名: 
+コンピューター: WIN11-64 (Microsoft Windows NT 10.0.26200.0)
+ホスト アプリケーション: powershell.exe -NoExit -ExecutionPolicy Bypass
+プロセス ID: 10872
+PSVersion: 5.1.26100.8457
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8457
+BuildVersion: 10.0.26100.8457
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+トランスクリプトが開始されました。出力ファイル: ../logs/Service_Monitor.log
+PS C:\PSController\bin> (Get-Service -Name Spooler).Status
+Stopped
+PS C:\PSController\bin> Start-Service -Name Spooler
+PS C:\PSController\bin> (Get-Service -Name Spooler).Status
+Running
+PS C:\PSController\bin> Stop-Transcript
+**********************
+Windows PowerShell トランスクリプト終了
+終了時刻: 20260525071704
+**********************

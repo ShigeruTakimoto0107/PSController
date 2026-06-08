@@ -1,0 +1,7 @@
+echo on
+Admin
+wait >
+Stop-Service -Name Spooler
+wait >
+pause
+exit

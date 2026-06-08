@@ -1,0 +1,16 @@
+; SSHテスト - OpenSSH確認
+admin
+echo on
+wait >
+print cyan [1/3] OpenSSHのインストール状態を確認...
+Get-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+wait >
+print cyan [2/3] sshdサービスの状態を確認...
+Get-Service -Name sshd
+wait >
+print cyan [3/3] sshdのスタートアップタイプを確認...
+Get-Service -Name sshd | Select-Object Name, StartType
+wait >
+print green [FINISH] 確認完了
+pause
+exit

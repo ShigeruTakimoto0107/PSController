@@ -1,0 +1,17 @@
+wait >
+# 赤
+print RED ==== ANSI RED COLOR ====
+# 緑
+print GREEN ==== ANSI GREEN COLOR ====
+# 黄色
+print YELLOW ==== ANSI YELLOW COLOR ====
+# 青
+print BLUE ==== ANSI BLUE COLOR ====
+# 水色
+print CYAN ==== ANSI CYAN COLOR ====
+# 紫
+print magenta ==== ANSI MAGENTA COLOR ====
+# 白
+print white ==== ANSI MWHITE COLOR ====
+print
+print green [TEST %COUNT%] Print表示テスト完了

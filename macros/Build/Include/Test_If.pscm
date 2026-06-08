@@ -1,0 +1,24 @@
+wait >
+#; --- if / elseif / else / endif ---
+print  magenta if / elseif / else / endif テスト
+
+setvar FLAG maybe
+
+if %FLAG% == ok
+    print red [TEST %COUNT%-1]IFが真（NG）
+elseif %FLAG% == maybe
+    print green [TEST %COUNT%-1]ELSEIFが真（OK）
+else
+    print red [TEST %COUNT%-1]ELSEが真（NG）
+endif
+print
+
+; --- if 偽 → else ---
+setvar FLAG ng
+if %FLAG% == ok
+    print red [TEST %COUNT%-2]IFが真（NG）
+else
+    print green [TEST %COUNT%-2]ELSEが真（OK）
+endif
+print
+

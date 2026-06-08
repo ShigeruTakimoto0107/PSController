@@ -1,0 +1,25 @@
+wait >
+; --- goto 前方ジャンプ ---
+print magenta goto前後ジャンプテスト開始
+goto GOTO_TARGET
+print red gotoスキップされるべき（NG）
+:GOTO_TARGET
+print green [TEST %COUNT%-1] goto前方ジャンプ（OK）
+print
+
+; --- goto 後方ジャンプ（1回だけ）---
+setvar JUMPED no
+goto JUMP_CHECK
+
+:JUMP_BACK
+setvar JUMPED yes
+goto JUMP_END
+
+:JUMP_CHECK
+if %JUMPED% == no
+    goto JUMP_BACK
+endif
+
+:JUMP_END
+print green [TEST %COUNT%-2] goto後方ジャンプ（OK）
+print

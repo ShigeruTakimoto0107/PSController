@@ -1,0 +1,11 @@
+wait >
+print magenta whileループ+比較テスト
+; ループ+比較テスト
+setvar Index 0
+
+while %Index% < 5
+    calc Index %Index% + 1
+    print green [TEST %COUNT%-%Index% ] While: Endwhile （OK）
+endwhile
+
+print

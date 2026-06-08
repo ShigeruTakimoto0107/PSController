@@ -1,0 +1,5 @@
+wait >
+print Killps　自分以外のパワーシェルをメモリから削除
+Killps
+print
+

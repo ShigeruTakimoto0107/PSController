@@ -1,0 +1,6 @@
+wait >
+; --- .logopen (監査ログ終了コマンドのテスト) ---
+.logclose
+waitto 10 トランスクリプト
+print green [TEST %COUNT%] 監査ログ開終了コマンドのテスト完了
+print

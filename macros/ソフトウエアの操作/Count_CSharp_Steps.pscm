@@ -1,0 +1,5 @@
+echo on
+wait >
+sendln ..\macros\ps1\Count_CSharp_Steps.ps1 C:\PSController\src
+pause
+exit

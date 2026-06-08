@@ -1,0 +1,109 @@
+; ============================================================
+; PSC 全コマンド確認マクロ v3 (Automated Build Verification)
+; ============================================================
+echo on
+; --- wait (初期起動プロンプトを待機) ---
+wait >
+
+; --- print ---
+print blue === PSC 全コマンド確認自動テストを開始します ===
+print
+
+; --- setvar ---
+; ループ+比較テスト
+setvar COUNT 0
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_.Logopen.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Print.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Ver.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Calc.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Sendln.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Pause.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Setprompt.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Waitto.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_If.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Loop.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Goto.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_While.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Getvar.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Echo.pscm
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_Call.pscm
+
+; --- admin (UAC昇格) についての案内 ---
+;sendln
+calc COUNT %COUNT% + 1
+;include ..\macros\Build\Include\Test_Admin.pscm
+print yellow [INFO] [TEST %COUNT%] admin コマンドはUACポップアップで自動化を妨げるため、ビルドテストではスキップします
+print
+
+; --- Exec についての案内 ---
+;sendln
+calc COUNT %COUNT% + 1
+;include ..\macros\Build\Include\Test_Exec.pscm
+print yellow [INFO] [TEST %COUNT%] exec コマンドは別プログラムの起動で自動化を妨げるため、ビルドテストではスキップします
+print
+
+; --- killps についての案内 ---
+;sendln
+calc COUNT %COUNT% + 1
+;include ..\macros\Build\Include\Test_Killps.pscm
+print yellow [INFO] [TEST %COUNT%] killps コマンドは別パワーシェルを強制終了するため、ビルドテストではスキップします
+print
+
+sendln
+calc COUNT %COUNT% + 1
+include ..\macros\Build\Include\Test_.Logclose.pscm
+
+print blue === 全 %COUNT% コマンド自動検証が完了しました ===
+print
+
+print cyan === 3秒停止します ===
+print
+pause 3
+; --- exit 入れないと制御が戻らない ---
+exit
+

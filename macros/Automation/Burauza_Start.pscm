@@ -1,0 +1,25 @@
+wait >
+echo on
+;killps
+
+; EdgeProfileフォルダの存在チェック
+sendln Test-Path "../macros/Automation/EdgeProfile"
+getvar ret
+sendln
+if "%ret%" == "False"
+	wait >
+    sendln New-Item -ItemType Directory -Path "../macros/Automation/EdgeProfile" -Force
+    wait >
+    print green [INFO] EdgeProfileフォルダを作成しました。
+else
+	wait >
+    sendln Remove-Item -Path "../macros/Automation/EdgeProfile/*" -Recurse -Force
+    wait >
+    print yellow [INFO] EdgeProfileフォルダの中身を削除しました。
+endif
+; ブラウザ起動
+sendln ..\macros\ps1\Burauza_Start.ps1
+wait >
+print green [INFO] ブラウザ起動完了
+pause
+exit

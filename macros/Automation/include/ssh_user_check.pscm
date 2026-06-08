@@ -1,0 +1,16 @@
+; SSHテスト - ユーザー確認
+admin
+echo on
+wait >
+print cyan [1/3] ユーザーの存在確認...
+Get-LocalUser -Name "psctest"
+wait >
+print cyan [2/3] Usersグループのメンバー確認...
+Get-LocalGroupMember -Group "Users"
+wait >
+print cyan [3/3] ホームフォルダの確認...
+Test-Path "C:\Users\psctest"
+wait >
+print green [FINISH] 確認完了
+pause
+exit

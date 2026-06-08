@@ -1,0 +1,11 @@
+wait >
+; --- echo off/on ---
+print magenta echo off/onテスト開始
+sendln
+echo off
+wait >
+print red   [TEST %COUNT%] このPrintテキストは画面に非表示（NG）
+echo on
+print green [TEST %COUNT%] このPrintテキストは画面に表示（OK）
+
+print

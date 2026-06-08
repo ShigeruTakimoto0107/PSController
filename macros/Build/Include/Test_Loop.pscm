@@ -1,0 +1,27 @@
+wait >
+; --- loop / endloop ---
+print magenta loopテスト開始 (3回ループ)
+setvar LOOP_COUNT 0
+sendln
+loop 3
+    wait >
+    sendln echo "ループ実行中..."
+endloop
+print green [TEST %COUNT%-1] loop 3回完了（OK）
+print
+
+; --- loop / break ---
+print magenta loop+breakテスト開始 (10回指定、1回目で脱出)
+
+loop 10
+    wait >
+    sendln echo "break実行前"
+    break
+endloop
+
+
+wait >
+
+print green [TEST %COUNT%-2] breakで脱出（OK）
+print
+

@@ -1,0 +1,33 @@
+; SSH OpenSSH Uninstall
+;admin
+;echo on
+;wait >
+print cyan Checking OpenSSH installation...
+setvar openssh_state
+Test-Path "C:\Windows\System32\OpenSSH\sshd.exe"
+getvar openssh_state
+if %openssh_state% == False
+    print blue OpenSSH not installed. Skip.
+    goto END_OPENSSH_UNINSTALL
+endif
+print cyan [1/3] Stopping sshd service...
+Stop-Service sshd -Force
+wait >
+print cyan [2/3] Disabling sshd service...
+Set-Service -Name sshd -StartupType Disabled
+wait >
+print cyan [3/3] Uninstalling OpenSSH...
+Remove-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+waitto 180 >
+if lastwait == ng
+    print red [ERROR] Timeout. Please check with check macro.
+    print red State: UninstallPending - reboot required.
+    pause
+    exit
+endif
+print green OpenSSH uninstalled.
+print yellow [NOTE] Reboot required to complete uninstall.
+:END_OPENSSH_UNINSTALL
+sendln
+;pause
+;exit

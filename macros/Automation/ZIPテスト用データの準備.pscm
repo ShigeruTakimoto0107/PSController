@@ -1,0 +1,19 @@
+admin
+echo on
+wait >
+; bin基準で macros/Automation/data/ を指定
+; フォルダ存在チェックと作成
+sendln if (-not (Test-Path "../macros/Automation/data")) { New-Item -ItemType Directory -Path "../macros/Automation/data" }
+print cyan [INFO] テスト用データの準備を開始します...
+
+wait >
+; Wallpaperフォルダからファイルをコピー（宛先もパスを指定）
+sendln Copy-Item -Path "C:\Windows\Web\Wallpaper\*" -Destination "../macros/Automation/data/" -Force -Recurse
+print cyan [INFO] C:\Windows\Web\Wallpaper からデータをコピー中...
+wait >
+
+print green [SUCCESS] テスト用データの準備が完了しました。
+print green [INFO] フォルダ: ../macros/Automation/data/ にファイルがコピーされました。
+
+pause
+exit

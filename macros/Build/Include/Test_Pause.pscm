@@ -1,0 +1,6 @@
+wait >
+# Pause
+print yellow 1秒間 pause します...
+pause 1
+print green [TEST %COUNT%] Pauseテスト完了
+print

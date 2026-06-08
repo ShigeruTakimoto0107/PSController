@@ -1,0 +1,19 @@
+; SSH Service Start
+;admin
+;echo on
+;wait >
+print cyan Checking sshd service status...
+setvar svc_status
+(Get-Service -Name sshd -ErrorAction SilentlyContinue).Status
+getvar svc_status
+if %svc_status% == Running
+    print green sshd is already running. Skip.
+    goto END_OPENSSH_SVC
+endif
+print cyan Starting sshd service...
+Start-Service sshd
+wait >
+:END_OPENSSH_SVC
+sendln
+;pause
+;exit

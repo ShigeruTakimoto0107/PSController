@@ -1,0 +1,23 @@
+wait >
+# waitto
+print  magenta waittoテスト開始
+sendln
+wait >
+sendln echo "waitto_test_success"
+waitto 5 waitto_test_success
+if lastwait == ok
+    print green  [TEST %COUNT%-1] waitto成功（OK）
+else
+    print red  [TEST %COUNT%-1] waittoタイムアウト（NG）
+endif
+print
+
+; --- waitto タイムアウト → lastwait == ng ---
+print yellow waittoタイムアウトテスト開始（2秒間意図的に待機します）
+waitto 2 NEVER_MATCH_STRING_XYZ
+if lastwait == ng
+    print green  [TEST %COUNT%-2] waittoタイムアウト検知確認（OK）
+else
+    print red  [TEST %COUNT%-2] waittoタイムアウト失敗（NG）
+endif
+print

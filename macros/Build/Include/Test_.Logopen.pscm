@@ -1,0 +1,6 @@
+wait >
+; --- .logopen (監査ログ開始コマンドのテスト) ---
+.logopen ..\logs\test_run.log
+print
+print green [TEST %COUNT%] 監査ログ開始コマンドのテスト完了
+print

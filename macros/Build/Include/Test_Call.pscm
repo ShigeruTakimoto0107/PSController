@@ -1,0 +1,31 @@
+wait >
+; --- call / return ---
+print cyan call/returnテスト開始
+call SUBROUTINE
+print green  [TEST %COUNT%-1] callから戻った（OK）
+print
+
+; --- call + 変数共有 ---
+setvar CALL_VAR before
+call SET_VAR
+if %CALL_VAR% == after
+    print green [TEST %COUNT%-2] call変数共有（OK）
+else
+    print red [TEST %COUNT%-2] call変数共有（NG）
+endif
+print
+
+goto NEXT
+; ============================================================
+; サブルーチン定義エリア
+; ============================================================
+:SUBROUTINE
+print magenta サブルーチン実行中...
+return
+
+:SET_VAR
+setvar CALL_VAR after
+return
+print
+
+:NEXT

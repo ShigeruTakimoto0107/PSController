@@ -1,0 +1,19 @@
+wait >
+; --- getvar ---
+; パターンなし（従来動作）
+print magenta getvarテスト（環境変数からユーザー名を取得）
+sendln
+wait >
+sendln $env:USERNAME
+getvar RESULT
+print green [TEST %COUNT%-1] 結果: %RESULT%（OK）
+print
+;sendln
+; パターンあり
+print magenta getvarテスト（パターンマッチで文字列を取得）
+sendln
+wait >
+sendln $env:USERNAME
+getvar RESULT \w+ 5
+print green [TEST %COUNT%-2] パターン一致: %RESULT%（OK）
+print

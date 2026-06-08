@@ -1,0 +1,36 @@
+wait >
+; --- setprompt ---
+; PowerShellのプロンプトをMYPROMPT> に変更
+print magenta PSController側のプロンプトパターンを新しい正規表現に切り替え
+
+sendln
+wait >
+sendln function prompt { "MYPROMPT> " }
+; PSController側のプロンプトパターンを新しい正規表現に切り替え
+setprompt ^MYPROMPT>\s*$
+
+print magenta  新プロンプトでsendln確認
+wait >
+sendln Write-Host "hello_setprompt"
+
+
+wait hello_setprompt
+print green [TEST %COUNT%-1] 新プロンプト下でコマンド実行成功（OK）
+print
+
+; プロンプトをデフォルトに戻す
+print magenta プロンプトをデフォルトに戻す
+sendln
+wait >
+sendln function prompt { "PS $PWD> " }
+
+setprompt ^PS .+>\s*$
+
+print magenta デフォルトプロンプト復帰確認
+wait >
+sendln Write-Host "back_to_default"
+
+wait back_to_default
+
+print green  [TEST %COUNT%-2] デフォルトプロンプト復帰成功（OK）
+print 

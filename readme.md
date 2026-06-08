@@ -189,31 +189,28 @@ PSController.exe sample.pscm
 ## ディレクトリ構成
 
 ```text
-PSController
-├─ src
-├─ macros
-├─ docs
-├─ build.bat
-├─ LICENSE
-└─ bin
-      PSController.exe
-```
 
+PSController          システムROOT
+├─bin               ビルドするとこのフォルダにPowerShellController.exeが出来上がります
+├─docs              設計書・コマンドマニュアル
+├─ico               アイコンファイル
+├─logs              マクロ実行時のLOG
+├─macros            各種マクロ
+│  ├─Automation      自動化用マクロ
+│  │  └─include       インクルード用マクロ
+│  ├─Build           ビルド時のマクロ
+│  │  └─Include       インクルード用マクロ
+│  └─ps1          　呼び出し用パワーシェルスクリプト
+└─src              ソースファイル
+
+```
 ---
 
 ## ドキュメント
 
 ### コマンドリファレンス
 
-- WAIT
-- WAITTO
-- SENDLN
-- IF
-- LOOP
-- GOTO
-- CALL
-- SETVAR
-- GETVAR
+- [コマンドマニュアルはこちら](docs/guide/macros.md)
 
 詳細は docs フォルダを参照してください。
 

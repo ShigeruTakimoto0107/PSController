@@ -1,0 +1,8 @@
+wait >
+# Ver
+sendln $PSVersionTable
+wait >
+Ver
+print
+print green [TEST %COUNT%] Version表示テスト完了
+print

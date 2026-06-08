@@ -1,0 +1,4 @@
+wait >
+Exec powershell.exe 
+pause
+exit

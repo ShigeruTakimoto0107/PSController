@@ -1,0 +1,13 @@
+wait >
+Admin
+; 1. レジストリ登録情報削除中
+print cyan レジストリ登録情報削除中中...
+sendln ../macros/ps1/remove_pscm.ps1
+wait >
+; 2. エクスプローラーの更新
+print cyan エクスプローラーを再起動中...
+sendln ../macros/ps1/restart_explorer.ps1
+print cyan === 5秒停止します ===
+print
+pause 5
+exit

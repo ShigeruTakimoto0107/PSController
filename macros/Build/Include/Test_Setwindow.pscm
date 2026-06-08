@@ -1,0 +1,13 @@
+wait >
+
+setwindow 100 100 1200 800
+// 処理中は大きく
+Print magenta Windowサイズ変更1
+sendln
+wait >
+pause 3
+// 完了後は小さく
+setwindow 200 200 600 400
+Print magenta Windowサイズ変更2
+
+

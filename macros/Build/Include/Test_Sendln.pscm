@@ -1,0 +1,8 @@
+wait >
+# Sendln
+
+sendln Write-Host " [TEST %COUNT%] sendlnの送信確認`n"
+
+waitto 3 sendlnの送信確認
+print green [TEST %COUNT%] Sendln送信確認テスト完了
+print

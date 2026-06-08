@@ -1,0 +1,19 @@
+wait >
+; 四則演算テスト
+
+setvar A 10
+setvar B 3
+print magenta 四則演算テスト
+
+calc RESULT %A% + %B%
+print green  [TEST %COUNT%-1]加算: %RESULT%
+
+calc RESULT %A% - %B%
+print green  [TEST %COUNT%-2]減算: %RESULT%
+
+calc RESULT %A% * %B%
+print green  [TEST %COUNT%-3]乗算: %RESULT%
+
+calc RESULT %A% / %B%
+print green  [TEST %COUNT%-4]除算: %RESULT%
+
