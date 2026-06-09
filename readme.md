@@ -176,7 +176,7 @@ build.bat
 
 詳細は Build ドキュメントを参照してください。
 
-- [ビルドマニュアルはこちら](docs/build/build.md)
+- [ビルドマニュアルはこちら](docs/Build/Build.md)
 ---
 
 ## 実行方法
