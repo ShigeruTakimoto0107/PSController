@@ -10,28 +10,16 @@ PSController は、PowerShell を Tera Term Macro 感覚で自動化するため
 多くの企業環境では、セキュリティポリシーにより外部ツールの導入が制限されています。
 PSController は Windows 標準搭載の PowerShell を利用することで、以下の環境制約下においても自動化を実現します。
 
-- 定型作業の自動化
-- サーバ運用の効率化
-- Windows サービス監視
-- ブラウザ自動化
+- 定型作業の自動化 / サーバ運用の効率化 / Windows サービス監視 / ブラウザ自動化
 
 ## 特徴
 
-- 単一 EXE 配布
-- C#5 で実装
-- 外部ライブラリ不要
-- Windows 標準環境重視
-- Fail Fast 設計
-- PowerShell 透過実行
-- Tera Term Macro ライクな操作感
-- マクロによる自動化
+- 単一 EXE 配布 / C#5 で実装 / 外部ライブラリ不要 / Windows 標準環境重視 / Fail Fast 設計
+- PowerShell 透過実行 / Tera Term Macro ライクな操作感 / マクロによる自動化
 
 ## 主な機能
 
-- PowerShell 自動化
-- Windows サービス監視
-- Windows サービス自動復旧
-- ブラウザ自動化 (Microsoft Edge デバッグ機能連携)
+- PowerShell 自動化 / Windows サービス監視 / Windows サービス自動復旧 /ブラウザ自動化 (Microsoft Edge デバッグ機能連携)
 
 # ビルド手順
 
@@ -42,6 +30,8 @@ Windows環境において、以下の手順でビルドを完了できます。
    - テスト用マクロの実行確認
    - プログラム（PowerShellController.exe）とマクロファイル（.pscm）の関連付け設定
 3. それぞれの確認に対して Y を入力することで、環境構築および関連付けが完了します。
+
+- [ビルドマニュアルはこちら](docs/Build/Build.md)
 
 ## 実行方法
 
