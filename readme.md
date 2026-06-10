@@ -1,36 +1,19 @@
 # PSController
 
-**PowerShell Automation Engine for Windows Standard Environments**
+PowerShell Automation Engine for Windows Standard Environments
 
 PSController は、PowerShell を Tera Term Macro 感覚で自動化するための軽量マクロエンジンです。
-
-追加ソフトウェアのインストールを前提とせず、Windows 標準環境に搭載されている PowerShell を活用して、自動化・運用業務・ブラウザ操作を実現します。
-
----
+追加ソフトウェアのインストールを前提とせず、Windows 標準環境に搭載されている PowerShell を活用して、自動化・運用業務を実現します。
 
 ## なぜ PSController なのか
 
-多くの企業環境では、セキュリティポリシーや運用ルールにより、
-
-- Python の導入ができない
-- AutoIt の導入ができない
-- Selenium の導入ができない
-- フリーソフトウェアの持ち込みができない
-
-といった制約があります。
-
-しかし、PowerShell は Windows に標準搭載されています。
-
-PSController は PowerShell を利用して、
+多くの企業環境では、セキュリティポリシーにより外部ツールの導入が制限されています。
+PSController は Windows 標準搭載の PowerShell を利用することで、以下の環境制約下においても自動化を実現します。
 
 - 定型作業の自動化
 - サーバ運用の効率化
 - Windows サービス監視
 - ブラウザ自動化
-
-を実現するために開発されました。
-
----
 
 ## 特徴
 
@@ -43,33 +26,41 @@ PSController は PowerShell を利用して、
 - Tera Term Macro ライクな操作感
 - マクロによる自動化
 
----
-
 ## 主な機能
 
-### PowerShell 自動化
+- PowerShell 自動化
+- Windows サービス監視
+- Windows サービス自動復旧
+- ブラウザ自動化 (Microsoft Edge デバッグ機能連携)
 
-PowerShell の対話実行をマクロから制御できます。
+# ビルド手順
 
-### Windows サービス監視
+Windows環境において、以下の手順でビルドを完了できます。
 
-サービス状態を定期的に確認し、停止を検知できます。
+1. プロジェクトルートにある build.bat をダブルクリックして実行します。
+2. ビルド処理が完了すると、コンソール上で以下の2点について確認メッセージが表示されます。
+   - テスト用マクロの実行確認
+   - プログラム（PowerShellController.exe）とマクロファイル（.pscm）の関連付け設定
+3. それぞれの確認に対して Y を入力することで、環境構築および関連付けが完了します。
 
-### Windows サービス自動復旧
+## 実行方法
 
-停止したサービスを自動的に再起動できます。
+build.bat を実行すると、bin フォルダ内に PowerShellController.exe が生成され、マクロファイル (.pscm) と関連付けられます。
 
-### ブラウザ自動化
+マクロファイル (.pscm) をダブルクリックすることで、関連付けられた PowerShellController.exe を通じてマクロが実行されます。
 
-Microsoft Edge のデバッグ機能を利用し、
+## ディレクトリ構成
 
-- URL ナビゲート
-- 検索実行
-- DOM 情報取得
+PSController          システムROOT
+├─bin               ビルド済み実行ファイル (PowerShellController.exe)
+├─docs              設計書・コマンドマニュアル
+├─ico               アイコンファイル
+├─logs              マクロ実行時のLOG
+├─macros            各種マクロ (.pscm)
+│  ├─Automation      自動化用マクロ
+│  └─Build           ビルド用マクロ
+└─src              ソースファイル
 
-などを自動化できます。
-
----
 
 ## 主なコマンド
 
@@ -78,35 +69,36 @@ Microsoft Edge のデバッグ機能を利用し、
 | カテゴリ | コマンド | 説明 |
 | :--- | :--- | :--- |
 | **IO** | `sendln [文字列]` | PowerShellにコマンド送信 |
-| **IO** | `wait <パターン>` | パターンが出力されるまで待機 |
-| **IO** | `waitto <秒> <パターン>` | タイムアウト付きパターン待機 |
+|  | `wait <パターン>` | パターンが出力されるまで待機 |
+|  | `waitto <秒> <パターン>` | タイムアウト付きパターン待機 |
 | **出力** | `print <色> <文字列>` | 色付きメッセージ出力 |
-| **出力** | `echo <on\|off>` | Printエコー制御 |
-| **出力** | `ver` | バージョン表示 |
-| **変数** | `setvar <名前> [値]` | 変数セット |
-| **変数** | `getvar <名前>` | 変数取得 |
+|  | `echo <on\|off>` | Printエコー制御 |
+|  | `ver` | バージョン表示 |
+|  | `setvar <名前> [値]` | 変数セット |
+|  | `getvar <名前>` | 変数取得 |
 | **フロー制御** | `if <左辺> <演算子> <右辺>` | 条件分岐 |
-| **フロー制御** | `elseif <左辺> <演算子> <右辺>` | 条件分岐（else if） |
-| **フロー制御** | `else` | 条件分岐（else） |
-| **フロー制御** | `endif` | 条件分岐終了 |
-| **フロー制御** | `loop <回数>` | 回数指定ループ開始 |
-| **フロー制御** | `endloop` | 回数指定ループ終了 |
-| **フロー制御** | `while <左辺> <演算子> <右辺>` | 条件ループ開始 |
-| **フロー制御** | `endwhile` | 条件ループ終了 |
-| **フロー制御** | `break` | ループ脱出 |
-| **フロー制御** | `goto <ラベル>` | ジャンプ |
-| **フロー制御** | `call <ラベル>` | サブルーチン呼び出し |
-| **フロー制御** | `return` | サブルーチン戻り |
+|  | `elseif <左辺> <演算子> <右辺>` | 条件分岐（else if） |
+|  | `else` | 条件分岐（else） |
+|  | `endif` | 条件分岐終了 |
+|  | `loop <回数>` | 回数指定ループ開始 |
+|  | `endloop` | 回数指定ループ終了 |
+|  | `while <左辺> <演算子> <右辺>` | 条件ループ開始 |
+|  | `endwhile` | 条件ループ終了 |
+|  | `break` | ループ脱出 |
+|  | `goto <ラベル>` | ジャンプ |
+|  | `call <ラベル>` | サブルーチン呼び出し |
+|  | `return` | サブルーチン戻り |
 | **システム** | `admin` | 管理者権限で再起動 |
-| **システム** | `exec <コマンド>` | 外部プロセス実行 |
-| **システム** | `exit` | PSController終了 |
-| **システム** | `killps` | PowerShellプロセス終了 |
-| **システム** | `pause <秒>` | 指定秒数停止 |
-| **システム** | `setprompt <正規表現>` | プロンプトパターン変更 |
+|  | `exec <コマンド>` | 外部プロセス実行 |
+|  | `exit` | PSController終了 |
+|  | `killps` | PowerShellプロセス終了 |
+|  | `pause <秒>` | 指定秒数停止 |
+|  | `setprompt <正規表現>` | プロンプトパターン変更 |
 | **ログ** | `.logopen <ファイル>` | ログ開始 |
-| **ログ** | `.logclose` | ログ終了 |
+|  | `.logclose` | ログ終了 |
 
 詳細はドキュメントを参照してください。
+- [コマンドマニュアルはこちら](docs/guide/macros.md)
 
 ---
 
@@ -135,162 +127,40 @@ Microsoft Edge を自動操作するサンプルを収録しています。
 サンプル：
 
 ```text
-macros/自動実行/自動検索.pscm
+macros/Automation/Burauza_Start.pscm
+macros/Automation/Burauza_AutomaticSearch.pscm
 ```
-
+- [サンプルマニュアルはこちら](docs/sample001/001.md)
 ---
 
 ### Service Monitoring
 
-Windows サービスの状態を監視するサンプルを収録しています。
+Windows サービスの状態を監視し、停止した Windows サービスを自動で再起動するサンプルを収録しています。
 
 主な内容：
 
 - サービス状態確認
 - 停止検知
 - ログ出力
-
----
-
-### Service Auto Recovery
-
-停止した Windows サービスを自動で再起動するサンプルを収録しています。
-
-主な内容：
-
 - サービス停止検知
 - 自動再起動
 - 復旧確認
 
----
-
-## ビルド方法
-
-ビルド環境を準備した後、以下を実行してください。
-
-```cmd
-build.bat
-```
-
-ビルド完了後、テストマクロが自動実行されます。
-
-詳細は Build ドキュメントを参照してください。
-
-- [ビルドマニュアルはこちら](docs/Build/Build.md)
----
-
-## 実行方法
-
-```cmd
-PSController.exe sample.pscm
-```
-
----
-
-## ディレクトリ構成
+サンプル：
 
 ```text
-
-PSController          システムROOT
-├─bin               ビルドするとこのフォルダにPowerShellController.exeが出来上がります
-├─docs              設計書・コマンドマニュアル
-├─ico               アイコンファイル
-├─logs              マクロ実行時のLOG
-├─macros            各種マクロ
-│  ├─Automation      自動化用マクロ
-│  │  └─include       インクルード用マクロ
-│  ├─Build           ビルド時のマクロ
-│  │  └─Include       インクルード用マクロ
-│  └─ps1          　呼び出し用パワーシェルスクリプト
-└─src              ソースファイル
-
+macros/Automation/Service_Monitoring.pscm
+macros/Automation/Service_Outage.pscm
 ```
+- [サンプルマニュアルはこちら](docs/sample002/002.md)
 ---
-
-## ドキュメント
-
-### コマンドリファレンス
-
-- [コマンドマニュアルはこちら](docs/guide/macros.md)
-
-詳細は docs フォルダを参照してください。
-
----
-
-## 想定用途
-
-- PowerShell 自動化
-- サーバ運用自動化
-- Windows サービス監視
-- Windows サービス自動復旧
-- ログ取得
-- 定型業務自動化
-- ブラウザ自動化
-- 社内 Web システム操作
-
----
-
 ## Security Notice
 
 PSController は PowerShell コマンドおよびユーザー定義マクロを実行します。
-
 第三者が作成したマクロを実行する場合は、内容を十分確認してください。
-
 本番環境で利用する前に、必ず検証環境で十分な動作確認を行ってください。
-
----
 
 ## 免責事項
 
 本ソフトウェアは現状のまま（AS IS）提供されます。
-
-本ソフトウェアの利用により発生した損害、データ損失、業務停止、その他いかなる不利益についても、開発者および著作権者は責任を負いません。
-
-PowerShell コマンドおよびマクロの実行は利用者自身の責任で行ってください。
-
----
-
-## ライセンス
-
-本プロジェクトは MIT License のもとで公開されています。
-
-MIT License の条件に従い、商用利用、改変、再配布が可能です。
-
-詳細は LICENSE ファイルを参照してください。
-
----
-
-## サポート
-
-### 不具合報告・要望
-
-GitHub Issues をご利用ください。
-
-### お問い合わせ
-
-pscontroller.project@gmail.com
-
----
-
-## 開発方針
-
-PSController は以下の方針を重視しています。
-
-- Windows 標準環境を活用する
-- 外部依存を最小限にする
-- 単一 EXE で配布する
-- C#5 互換性を維持する
-- 保守性を重視する
-- Fail Fast 思想を維持する
-
----
-
-PSController の目標は、
-
-**「PowerShell を Tera Term Macro 感覚で自動化できること」**
-
-そして、
-
-**「制約の厳しい企業環境でも利用できる実用的な自動化ツールであること」**
-
-です。
+本ソフトウェアの利用により発生した損害、データ損失、業務停止、その他いかなる不利益についても、開発者は責任を負いません。利用者の判断と責任において使用してください。
