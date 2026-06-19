@@ -8,7 +8,9 @@ bin/
 obj/
 backup/
 out_md/
+etc/
 macros/bak/
+GitHubリカバリコード/
 macros/Automation/EdgeProfile
 macrosAutomation/Data
 macros/Automation/backup

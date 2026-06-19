@@ -143,12 +143,57 @@ macros/Automation/Service_Monitoring.pscm
 macros/Automation/Service_Outage.pscm
 ```
 - [サンプルマニュアルはこちら](docs/sample002/002.md)
+----
+
+### 不具合報告・要望
+
+GitHub Issues をご利用ください。
+
+### お問い合わせ
+
+pscontroller.project@gmail.com
+
+---
+
+## 開発方針
+
+PSController は以下の方針を重視しています。
+
+- Windows 標準環境を活用する
+- 外部依存を最小限にする
+- 単一 EXE で配布する
+- C#5 互換性を維持する
+- 保守性を重視する
+- Fail Fast 思想を維持する
+
+---
+
+PSController の目標は、
+
+**「PowerShell を Tera Term Macro 感覚で自動化できること」**
+
+そして、
+
+**「制約の厳しい企業環境でも利用できる実用的な自動化ツールであること」**
+
+です。
+
+
 ---
 ## Security Notice
 
 PSController は PowerShell コマンドおよびユーザー定義マクロを実行します。
 第三者が作成したマクロを実行する場合は、内容を十分確認してください。
 本番環境で利用する前に、必ず検証環境で十分な動作確認を行ってください。
+
+## Support for Development
+
+本ツールは無償で公開しておりますが、開発継続のための支援を受け付けております。
+
+- GitHub Sponsors: [ご自身のGitHub SponsorsプロフィールURLを記載]
+- Buy Me a Coffee: [設定済みのBuy Me a CoffeeのページURLを記載]
+
+支援によって特別な権限や機能が提供されるわけではありません。ご理解いただけますと幸いです。
 
 ## 免責事項
 
