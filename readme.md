@@ -72,6 +72,19 @@ PSController prioritizes the following principles:
 
 PSController aims to provide an environment where "PowerShell can be automated with the feel of Tera Term Macro."
 
+## Support for Development
+
+This project is maintained for the purpose of stable system automation. 
+If you find this tool useful and would like to support its continued development, 
+you can contribute via the following platforms:
+
+- [GitHub Sponsors]: https://github.com/sponsors/ShigeruTakimoto0107
+- [Buy Me a Coffee]: https://www.buymeacoffee.com/shigerutakimoto0107
+
+Please note that these contributions are intended to support development, 
+not for special access or functional privileges.
+
+
 ## Security and Disclaimer
 
 PSController executes arbitrary PowerShell commands.
