@@ -21,21 +21,6 @@ In many enterprise environments, the introduction of third-party tools is restri
 - Focused on Windows standard environments
 - Fail-Fast design
 
-## Future Vision: The Cross-Shell Orchestrator
-
-The ultimate goal of this project is to evolve beyond a simple PowerShell automation tool into a robust **Cross-Shell Orchestration Engine**. 
-
-In the modern development landscape, engineers frequently switch between Windows PowerShell, Linux Bash, and other terminal environments. Our vision is to bridge the gap between these isolated silos using **Windows Terminal** as the central hub.
-
-### The Core Concept
-We are building a controller that treats different terminal tabs and panes as interconnected nodes. Imagine the following workflow orchestrated by PSController:
-
-*   **Inter-Process Communication:** Monitoring an event or a specific output log in **Tab A (PowerShell)** and automatically triggering a corresponding command in **Tab B (Ubuntu/Bash)**.
-*   **Unified Macro Automation:** Implementing a "Tera Term-style" macro language that isn't confined to a single shell, but orchestrates a series of tasks across multiple operating systems and environments.
-*   **Seamless Integration:** By leveraging the `wt` (Windows Terminal) command-line interface, PSController will dynamically spawn, manage, and communicate across tabs and panes, creating a cohesive, automated developer workspace.
-
-By combining the power of modern terminal features with the reliability of classical macro-based automation, we aim to redefine how developers bridge the gap between Windows and Linux environments.
-
 ## Key Functions
 
 - PowerShell automation
@@ -86,6 +71,21 @@ PSController prioritizes the following principles:
 - Uphold Fail-Fast principles
 
 PSController aims to provide an environment where "PowerShell can be automated with the feel of Tera Term Macro."
+
+## Future Vision: The Cross-Shell Orchestrator
+
+The ultimate goal of this project is to evolve beyond a simple PowerShell automation tool into a robust **Cross-Shell Orchestration Engine**. 
+
+In the modern development landscape, engineers frequently switch between Windows PowerShell, Linux Bash, and other terminal environments. Our vision is to bridge the gap between these isolated silos using **Windows Terminal** as the central hub.
+
+### The Core Concept
+We are building a controller that treats different terminal tabs and panes as interconnected nodes. Imagine the following workflow orchestrated by PSController:
+
+*   **Inter-Process Communication:** Monitoring an event or a specific output log in **Tab A (PowerShell)** and automatically triggering a corresponding command in **Tab B (Ubuntu/Bash)**.
+*   **Unified Macro Automation:** Implementing a "Tera Term-style" macro language that isn't confined to a single shell, but orchestrates a series of tasks across multiple operating systems and environments.
+*   **Seamless Integration:** By leveraging the `wt` (Windows Terminal) command-line interface, PSController will dynamically spawn, manage, and communicate across tabs and panes, creating a cohesive, automated developer workspace.
+
+By combining the power of modern terminal features with the reliability of classical macro-based automation, we aim to redefine how developers bridge the gap between Windows and Linux environments.
 
 ## Support for Development
 
