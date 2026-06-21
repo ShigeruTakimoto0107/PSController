@@ -96,6 +96,7 @@ you can contribute via the following platforms:
 * [GitHub Sponsors](https://github.com/sponsors/ShigeruTakimoto0107)
 * [Buy Me a Coffee](https://www.buymeacoffee.com/shigerutakimoto0107)
 
+
 Please note that these contributions are intended to support development, 
 not for special access or functional privileges.
 
